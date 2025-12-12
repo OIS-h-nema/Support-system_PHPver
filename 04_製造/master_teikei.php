@@ -47,7 +47,7 @@ try {
     <!-- ヘッダー -->
     <div class="master-header">
         <h1>マスタ設定 - 定型文</h1>
-        <button type="button" class="master-close-btn">閉じる</button>
+        <button type="button" id="btn-master-close" class="master-close-btn">閉じる</button>
     </div>
     
     <!-- メッセージエリア -->
@@ -106,8 +106,8 @@ try {
     <!-- 一覧エリア -->
     <div class="master-list-area">
         <div class="data-table-container">
-            <div class="data-table-header">
-                <table>
+            <div class="data-table-wrapper">
+                <table class="master-table">
                     <thead>
                         <tr>
                             <th class="col-bumon">部門</th>
@@ -117,10 +117,6 @@ try {
                             <th class="col-action">操作</th>
                         </tr>
                     </thead>
-                </table>
-            </div>
-            <div class="data-table-body-wrapper">
-                <table class="master-table">
                     <tbody id="master-table-body">
                         <tr><td colspan="5" class="no-data">読み込み中...</td></tr>
                     </tbody>

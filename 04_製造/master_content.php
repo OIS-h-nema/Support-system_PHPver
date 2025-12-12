@@ -37,7 +37,7 @@ requireLogin();
     <!-- ヘッダー -->
     <div class="master-header">
         <h1>マスタ設定 - 対応内容項目</h1>
-        <button type="button" class="master-close-btn">閉じる</button>
+        <button type="button" id="btn-master-close" class="master-close-btn">閉じる</button>
     </div>
     
     <!-- メッセージエリア -->
@@ -77,8 +77,8 @@ requireLogin();
     <!-- 一覧エリア -->
     <div class="master-list-area">
         <div class="data-table-container">
-            <div class="data-table-header">
-                <table>
+            <div class="data-table-wrapper">
+                <table class="master-table">
                     <thead>
                         <tr>
                             <th class="col-code">項目コード</th>
@@ -87,10 +87,6 @@ requireLogin();
                             <th class="col-action">操作</th>
                         </tr>
                     </thead>
-                </table>
-            </div>
-            <div class="data-table-body-wrapper">
-                <table class="master-table">
                     <tbody id="master-table-body">
                         <tr><td colspan="4" class="no-data">読み込み中...</td></tr>
                     </tbody>
