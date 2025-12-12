@@ -1110,7 +1110,7 @@ $flash_errors = getFlashErrors();
         padding: 12px 20px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: flex-start;
         flex-shrink: 0;
     }
     
