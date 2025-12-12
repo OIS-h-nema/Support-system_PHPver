@@ -14,7 +14,7 @@ echo ========================================
 echo.
 
 REM Set directories (use short path or quotes properly)
-set "SOURCE_DIR=D:\#M\PG_DATA\OIS社内システム\PG_DATA\サポート報告書WEB\04_製造"
+set "SOURCE_DIR=D:\#M\PG_DATA\evo_新規開発課\Support-system_PHPver\04_製造"
 set "TARGET_DIR=\\LPG-NEMA\C\inetpub\wwwroot\support-system"
 
 echo Source: %SOURCE_DIR%
