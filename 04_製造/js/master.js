@@ -56,6 +56,7 @@ var MasterManager = {
         // 閉じるボタン
         $('#btn-master-close, .master-close-btn').off('click').on('click', function(e) {
             e.preventDefault();
+            alert('閉じるボタンが押されました');
             self.close();
         });
         
