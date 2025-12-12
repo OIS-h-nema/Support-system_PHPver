@@ -1,0 +1,15 @@
+Name, Type, Size, Option
+, SEQNO, Long, 4
+, PARENT_SEQ, Long, 4
+, 顧客コード, Long, 4
+, 部門コード, Long, 4
+, 顧客名, Text, 255
+, 顧客名カナ, Text, 255
+, 顧客略称, Text, 255
+, 郵便番号, Text, 255
+, 住所, Text, 255
+, 電話番号, Text, 255
+, FAX, Text, 255
+, 更新日, DateTime, 8
+,{Index}PrimaryKey,+SEQNO,
+,{Index}顧客コード,+PARENT_SEQ;+顧客コード,

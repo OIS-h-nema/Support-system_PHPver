@@ -1,0 +1,330 @@
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' 2022/03/03 h.nema
+' *************************************************************************************
+
+Public Sub AllClearCtrl(vFormName As String)
+
+'//----------------------------------------------
+'// フォームのコントロール値を全てクリア
+'//----------------------------------------------
+
+    Dim frm As Form
+    Dim ix As Long
+    
+    On Error Resume Next
+    Set frm = Forms(vFormName)
+    
+    For ix = 0 To frm.Controls.Count - 1
+    
+        If Len(Nz(frm.Controls(ix).Tag, "")) > 0 Then
+        Else
+            frm.Controls(ix) = Null
+        End If
+        
+    Next ix
+    
+    Set frm = Nothing
+
+End Sub
+
+
+Public Function KIsLoad(FormName As String) As Boolean
+
+'//--------------------------
+'//
+'//--------------------------
+
+    Dim var As Variant
+    
+    KIsLoad = False
+    For Each var In Forms
+        If var.Name = FormName Then
+            KIsLoad = True
+        End If
+    Next
+    
+End Function
+
+
+Public Function KShowForm(vFormName As String)
+    
+'//--------------------------
+'//
+'//--------------------------
+    
+    If KIsLoad(vFormName) = True Then
+        DoCmd.RepaintObject
+    Else
+        DoCmd.OpenForm vFormName
+    End If
+
+End Function
+
+
+Public Function KSwitchForm(vFormName As String, Optional vArg As String = "", Optional vWindowMode As Long = acWindowNormal)
+
+'//--------------------------
+'//
+'//--------------------------
+
+    Dim s As String
+    
+    If Forms.Count > 0 Then
+        s = Screen.ActiveForm.Name
+    Else
+        s = ""
+    End If
+    
+    
+    '// 指定されたフォームを開く
+    If KIsLoad(vFormName) = True Then
+        DoCmd.RepaintObject
+    Else
+        If Len(vArg) > 0 Then
+            DoCmd.OpenForm vFormName, , , , , vWindowMode, vArg
+        Else
+            DoCmd.OpenForm vFormName, , , , , vWindowMode
+        End If
+    End If
+    
+    
+    '// 開いていたフォームを閉じる
+    If s = "" Then
+    ElseIf s = vFormName Then
+    Else
+        DoCmd.Close acForm, s, acSaveYes
+    End If
+
+End Function
+
+
+Public Function OpenForm(vFormName As String, Optional vArg As String = "", Optional vWindowMode As Long = acWindowNormal)
+
+'//--------------------------
+'// 指定されたフォームを開く
+'//--------------------------
+       
+    If KIsLoad(vFormName) = True Then
+        DoCmd.RepaintObject
+    Else
+        If Len(vArg) > 0 Then
+            DoCmd.OpenForm vFormName, , , , , vWindowMode, vArg
+            Screen.ActiveForm.SetFocus
+        Else
+            DoCmd.OpenForm vFormName, , , , , vWindowMode
+            Screen.ActiveForm.SetFocus
+        End If
+    End If
+    
+End Function
+
+
+Public Function KByeBye()
+    DoCmd.Close acForm, Screen.ActiveForm.Name, acSaveYes
+End Function
+
+
+Public Function PutLog(Optional vProcess As String = "", Optional vResult As String = "")
+
+    Call DelOldLog
+
+    Dim rs As Recordset
+    
+    On Error GoTo ERR
+    
+    Set rs = CurrentDb.OpenRecordset("$LOG")
+
+    rs.AddNew
+    rs!処理日時 = Now()
+    rs!処理内容 = vProcess
+    rs!実行結果 = vResult
+    rs.Update
+    
+    Set rs = Nothing
+    
+    Exit Function
+    
+ERR:
+
+    MsgBox ("エラー：PutLog")
+    Exit Function
+
+End Function
+
+
+Public Function DelOldLog()
+    
+    '//保存するログの件数は10万件までとする
+    
+    Dim maxID As Long
+    Dim strSQL As String
+    
+    maxID = Nz(DMax("LOGID", "$LOG"), 0)
+       
+    CurrentDb.Execute "DELETE FROM [$LOG] WHERE LOGID <= " & maxID - 100000
+    
+End Function
+
+
+Public Function V_マスタ取込(vテーブル名 As String, vワーク名 As String)
+
+    CurrentDb.Execute "DELETE FROM " & vワーク名
+
+    Dim RSADO As ADODB.Recordset
+    Set RSADO = New ADODB.Recordset
+    
+    Dim rsDAO As Recordset
+    Set rsDAO = OpenDAOTable(vワーク名).Clone
+
+    Dim strSQL As String
+    strSQL = ""
+    
+'--------------------------------------------------------------------------------------
+    On Error GoTo Error_マスタ取込み
+'--------------------------------------------------------------------------------------
+    
+    If xSUP_CON.State = 0 Then
+        Call SQLオープンセット_SUPPORTDB
+    End If
+    
+    SPCMD.Parameters.Refresh
+    SPCMD.CommandText = "GET_TBL"
+    SPCMD.Parameters("@テーブル名") = vテーブル名
+
+    Set RSADO = SPCMD.Execute
+    With RSADO
+    
+        If .RecordCount > 0 Then
+        
+            Do Until .EOF
+        
+                rsDAO.AddNew
+        
+                KRecToRec RSADO, rsDAO
+        
+                rsDAO.Update
+                
+                .MoveNext
+            Loop
+        
+        End If
+    
+    End With
+    
+    Set RSADO = Nothing
+    Set rsDAO = Nothing
+    
+    Exit Function
+
+'--------------------------------------------------------------------------------------
+Error_マスタ取込み:
+
+    Beep
+    MsgBox Error & "-> ｺｰﾄﾞｴﾗｰ:ｼｽﾃﾑ担当者に報告!" & vテーブル名, 0, "マスタ取込み"
+    
+    Set RSADO = Nothing
+    Set rsDAO = Nothing
+    
+    Exit Function
+    
+End Function
+
+
+Public Function V_SYS管理更新(v入力マシン As String, vフィールド名 As String, v値 As String)
+
+'--------------------------------------------------------------------------------------
+    On Error GoTo Error_マスタ取込み
+'--------------------------------------------------------------------------------------
+    
+    If xSUP_CON.State = 0 Then
+        Call SQLオープンセット_SUPPORTDB
+    End If
+    
+    SPCMD.Parameters.Refresh
+    SPCMD.CommandText = "UPD_SYS_管理"
+    SPCMD.Parameters("@入力マシン") = v入力マシン
+    SPCMD.Parameters("@フィールド名") = vフィールド名
+    SPCMD.Parameters("@値") = v値
+
+    SPCMD.Execute
+       
+    Exit Function
+
+'--------------------------------------------------------------------------------------
+Error_マスタ取込み:
+
+    Beep
+    MsgBox Error & "-> ｺｰﾄﾞｴﾗｰ:ｼｽﾃﾑ担当者に報告!" & v入力マシン & "/" & vフィールド名 & "/" & v値, 0, "UPD_SYS_管理"
+    
+    Exit Function
+    
+End Function
+
+
+Sub DeleteAllTempModules()
+
+    Call PutLog("DeleteAllTempModules()", "start")
+   
+    Dim vbProj As VBIDE.VBProject
+    Dim vbComp As VBIDE.VBComponent
+    Dim i As Integer
+    Dim moduleName As String
+
+    '//VBEプロジェクトへの参照を取得
+    Set vbProj = Application.VBE.VBProjects(1) ' 1は現在のプロジェクト
+
+    '//全てのモジュールをループして、~TMPCLPで始まるモジュールを削除
+    For i = vbProj.VBComponents.Count To 1 Step -1
+    
+        Set vbComp = vbProj.VBComponents(i)
+        moduleName = vbComp.Name
+        
+        '//モジュール名が "~TMPCLP" で始まるか確認
+        If Left(moduleName, 7) = "~TMPCLP" Then
+            vbProj.VBComponents.Remove vbComp
+            Call PutLog("DeleteAllTempModules()", "モジュール '" & moduleName & "' を削除しました。")
+        End If
+    Next i
+    
+    Call PutLog("DeleteAllTempModules()", "end")
+
+End Sub
+
+
+Sub AddVBExtensibilityReference()
+
+    Call PutLog("AddVBExtensibilityReference()", "start")
+
+    Dim ref As Object
+    Dim isReferenceFound As Boolean
+    isReferenceFound = False
+
+    ' 現在の参照設定を確認
+    For Each ref In Application.VBE.ActiveVBProject.References
+        If ref.Name = "VBIDE" Then
+            isReferenceFound = True
+            Exit For
+        End If
+    Next ref
+
+    ' 参照が見つからなかった場合、追加する
+    If Not isReferenceFound Then
+        On Error Resume Next
+        ' Microsoft Visual Basic for Applications Extensibility 5.3 の GUID
+        Application.VBE.ActiveVBProject.References.AddFromGuid "{0002E157-0000-0000-C000-000000000046}", 5, 3
+        If ERR.Number = 0 Then
+            Call PutLog("AddVBExtensibilityReference()", "Microsoft Visual Basic for Applications Extensibility 5.3 参照が追加されました。")
+        Else
+            Call PutLog("AddVBExtensibilityReference()", "参照を追加できませんでした。エラー番号: " & ERR.Number)
+        End If
+        On Error GoTo 0
+    Else
+        Call PutLog("AddVBExtensibilityReference()", "Microsoft Visual Basic for Applications Extensibility 5.3 参照は既に追加されています。")
+    End If
+    
+    Call PutLog("AddVBExtensibilityReference()", "end")
+    
+End Sub

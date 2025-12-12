@@ -1,0 +1,4 @@
+Name, Type, Size, Option
+, TYPE, Long, 4
+, ServerPath, Text, 255
+, ServerFileName, Text, 255

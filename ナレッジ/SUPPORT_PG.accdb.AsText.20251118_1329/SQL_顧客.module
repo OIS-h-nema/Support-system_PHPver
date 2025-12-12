@@ -1,0 +1,93 @@
+Option Compare Database
+Option Explicit
+
+'*************************************************************************************
+'* 2022/02/25 h.nema
+'*  サーバ名：CEWEB
+'*  DB名：CeCrm
+'*  テーブル名：t_customer
+'*************************************************************************************
+
+Dim strSQL As String
+Dim rs As Recordset
+Dim ADORS As ADODB.Recordset
+
+Public Function V_顧客取得_顧客コード(v顧客コード As Long) As ADODB.Recordset
+
+'//-------------------------------------------
+'// 顧客コード(cust_main_code)からレコードを取得
+'//-------------------------------------------
+   
+    Set ADORS = New ADODB.Recordset
+
+    strSQL = "SELECT * FROM t_customer"
+    strSQL = strSQL & " WHERE cust_main_code = " & v顧客コード
+    
+    If xCE_CON.State = 0 Then
+        Call SQLオープンセット_CEWEB
+    End If
+    
+    ADORS.Open strSQL, xCE_CON, adOpenStatic, adLockReadOnly, adCmdText
+
+    Set V_顧客取得_顧客コード = ADORS
+    Set ADORS = Nothing
+
+End Function
+
+
+Public Sub V_SQL顧客更新()
+
+    Set ADORS = New ADODB.Recordset
+
+    strSQL = "SELECT * FROM t_customer"
+    
+    '//ver.4.13の仕様追加に伴う修正
+    If CBool(gEnviron.GetValue("gネットワークFLG")) = True And gEnviron.GetValue("ver") = "4.13" Then
+        strSQL = strSQL & " WHERE update_datetime > '" & Nz(DMax("更新日", "SQL_顧客"), "1900/01/01 00:00") & "'"
+    End If
+    
+    If xCE_CON.State = 0 Then
+        Call SQLオープンセット_CEWEB
+    End If
+    
+    ADORS.Open strSQL, xCE_CON, adOpenStatic, adLockReadOnly, adCmdText
+    
+    If ADORS.RecordCount > 0 Then
+    
+        Set rs = OpenDAOTable("SQL_顧客")
+    
+        Do Until ADORS.EOF
+        
+            rs.Index = "PrimaryKey"
+            rs.Seek "=", CLng(ADORS!seq)
+        
+            If rs.NoMatch Then
+                rs.AddNew
+            Else
+                rs.Edit
+            End If
+        
+            rs!SEQNO = ADORS!seq
+            rs!parent_seq = ADORS!parent_seq
+            rs!顧客コード = ADORS!cust_main_code
+            rs!顧客名 = ADORS!cust_name
+            rs!顧客名カナ = ADORS!cust_kana
+            rs!顧客略称 = ADORS!cust_ryaku
+            rs!郵便番号 = ADORS!post_code
+            rs!住所 = ADORS!address01 & ADORS!address02
+            rs!電話番号 = ADORS!tel01
+            rs!fax = ADORS!fax
+            rs!更新日 = ADORS!update_datetime
+        
+            rs.Update
+        
+            ADORS.MoveNext
+        
+        Loop
+        
+    End If
+    
+    Set ADORS = Nothing
+    Set rs = Nothing
+
+End Sub

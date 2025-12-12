@@ -1,0 +1,58 @@
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' 2010/05/25
+' 2010/12/09
+' *************************************************************************************
+
+Private Declare PtrSafe Function W32APIGetComputerName Lib "kernel32" Alias "GetComputerNameA" (ByVal lpBuffer As String, nSize As Long) As Long
+
+    
+Public Function GetPCName() As String
+
+'//----------------------------
+'// 自分のコンピュータ名を返す
+'//----------------------------
+    
+    Dim buff As String * 21
+    
+    W32APIGetComputerName buff, Len(buff)
+    
+    GetPCName = Left$(buff, InStr(buff, vbNullChar) - 1)
+
+End Function
+
+
+Public Function ExpPDF(vReportName As String, _
+                       Optional vOutputPath As String = "")
+'//---------------------------------------
+'//  PDF出力 レポート指定(Access2007以降)
+'//---------------------------------------
+
+    If Nz(vOutputPath, "") = "" Then
+        vOutputPath = "D:\" & Format(Now, "yyyymmddhhnnss") & ".pdf"
+    End If
+
+    DoCmd.OutputTo acOutputReport, vReportName, acFormatPDF, vOutputPath
+    
+    g処理中.Show vOutputPath, 3000
+
+End Function
+
+
+Public Function ExpExcel(vTableName As String, _
+                         Optional vOutputPath As String = "")
+'//----------------------------
+'// Excel出力 テーブル指定
+'//----------------------------
+    
+    If Nz(vOutputPath, "") = "" Then
+        vOutputPath = "D:\" & Format(Now(), "yyyymmddhhnnss")
+    End If
+    
+    DoCmd.TransferSpreadsheet acExport, acSpreadsheetTypeExcel9, vTableName, vOutputPath
+
+    g処理中.Show vOutputPath, 3000
+
+End Function

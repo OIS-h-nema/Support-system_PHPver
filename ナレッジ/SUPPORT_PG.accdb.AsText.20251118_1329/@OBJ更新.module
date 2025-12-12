@@ -1,0 +1,348 @@
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' //2022/07/19 h.nema
+' *************************************************************************************
+
+Public Function SYSTEM_UPDATE()
+    
+    Call PutLog("SYSTEM_UPDATE()", "start")
+    
+    If IsNull(DLookup("ServerPath", "$DataPath", "TYPE=1")) = True Then
+        DoCmd.RunSQL "INSERT INTO [$DataPath] VALUES (1, '\\ois-dmain-svr\販売管理\サポート入力システム\SUPPORTPG\', 'SUPPORT_PG.accdb')"
+    End If
+    
+    Dim vGenpon_Path As String: vGenpon_Path = DLookup("ServerPath", "$DataPath", "TYPE=1")
+    Dim vGenpon_Name As String: vGenpon_Name = DLookup("ServerFileName", "$DataPath", "TYPE=1")
+    
+    On Error GoTo ERR
+        
+    Dim ix As Integer
+    Dim objCount As Integer
+    Dim objName As String
+
+    Dim geVer As String
+    Dim gedb As Database
+    Dim gers As Recordset
+    Dim geApp As Access.Application
+    
+    Dim loVer As String
+    Dim lodb As Database
+    Dim lors As Recordset
+    Dim loApp As Object
+    
+    Dim objTableDef As TableDef
+    Dim objQueryDef As QueryDef
+    Dim objForm As AccessObject
+    Dim objModule As Object
+    Dim objReport As AccessObject
+    
+    If Dir(Application.CurrentProject.Path & "\SUPPORT_RESTART.bat") <> "" Then
+        Kill (Application.CurrentProject.Path & "\SUPPORT_RESTART.bat")
+    End If
+    
+    If CBool(gEnviron.GetValue("gネットワークFLG")) = False Then
+        Exit Function
+    End If
+
+    If vGenpon_Path <> Application.CurrentProject.Path & "\" Then
+            
+        '//原本のディレクトリに指定のaccdbファイルがあるか確認する
+        If Len(Dir(vGenpon_Path & vGenpon_Name)) > 0 Then
+                
+            '//原本のファイルがロックされているか確認
+            If Len(Dir(vGenpon_Path & Mid(vGenpon_Name, 1, InStr(vGenpon_Name, ".")) & "laccdb")) > 0 Then
+                Call PutLog("SYSTEM_UPDATE()", "原本がロックされているため、アップデートを中断")
+                '//ロックされている場合はアップデートを中止
+                If MsgBox("原本ファイルがロック状態にあり、アップデートが実施できません。このままシステムを起動しますか？", vbYesNo) = vbYes Then
+                    Exit Function
+                Else
+                    Call PutLog("SYSTEM_UPDATE()", "アップデート延期の為、ユーザー判断でシステムを終了")
+                    Application.Quit
+                End If
+            End If
+        
+            '//accessファイルを開く
+            Set gedb = OpenDatabase(vGenpon_Path & vGenpon_Name)
+            Set gers = gedb.OpenRecordset("$ENVIRON")
+        
+            '//$ENVIRONの(KEY)のバージョンを比較
+            gers.Index = "PrimaryKey"
+            gers.Seek "=", "ver"
+            
+            If Not gers.NoMatch = True Then
+                
+                geVer = gers!Value
+                
+                Set gers = Nothing
+                Set gedb = Nothing
+                
+                Set lodb = CurrentDb
+                Set lors = lodb.OpenRecordset("$ENVIRON")
+                
+                lors.Index = "PrimaryKey"
+                lors.Seek "=", "ver"
+                
+                If lors.NoMatch = True Then
+                    Call PutLog("SYSTEM_UPDATE()", "原本エラーにより処理を中断")
+                    MsgBox "テーブルエラー：$ENVIRONにバージョン情報がありません"
+                    Exit Function
+                End If
+                
+                loVer = lors!Value
+                
+                If CDbl(geVer) > CDbl(loVer) Then
+                
+                    If MsgBox("新バージョンがあります。バージョンアップしますか？", vbYesNo) = vbYes Then
+                
+                        g処理中.Echo "システムアップデート中...(" & loVer & "⇒" & geVer & ")" & vbCrLf & "しばらくお待ちください。"
+                        
+                        '//原本のaccdbファイルをカレントDBファイルと同じ場所にGEN_SUPPORT_PG.accdbリネームしてコピー
+                        FileCopy vGenpon_Path & vGenpon_Name, Application.CurrentProject.Path & "\GEN_SUPPORT_PG.accdb"
+                        
+                        '//********************************************************************
+                        '// オブジェクト：テーブル/クエリについてはデータベース接続で取得可能 *
+                        '//********************************************************************
+
+                        '//accessファイルを開く
+                        Set gedb = OpenDatabase(Application.CurrentProject.Path & "\GEN_SUPPORT_PG.accdb")
+                        Set gers = gedb.OpenRecordset("$ENVIRON")
+
+                        '//テーブル
+                        For Each objTableDef In gedb.TableDefs
+
+                            Select Case objTableDef.Name
+                                Case "@修正履歴"
+                                    
+                                    Dim rsローカル As Recordset
+                                    Dim rs原本 As Recordset
+                                    Set rsローカル = lodb.OpenRecordset("@修正履歴")
+                                    Set rs原本 = gedb.OpenRecordset("@修正履歴")
+                                
+                                    Do Until rs原本.EOF
+                                        rsローカル.Index = "PrimaryKey"
+                                        rsローカル.Seek "=", rs原本!ID
+                                        
+                                        If rsローカル.NoMatch = True Then
+                                            rsローカル.AddNew
+                                            KRecToRec rs原本, rsローカル
+                                            rsローカル.Update
+                                        End If
+                                        rs原本.MoveNext
+                                    Loop
+                                    
+                                    Set rsローカル = Nothing
+                                    Set rs原本 = Nothing
+                                                                        
+                            
+                                Case "$ENVIRON" '//$ENVIRONテーブル
+                                    '//カレントDBファイルのフィールドの値をコピーしてきた原本ファイルのテーブルに更新
+                                    lors.Index = "PrimaryKey"
+                                    lors.Seek "=", "作業担当者コード"
+
+                                    If lors.NoMatch = False Then
+                                        gers.Index = "PrimaryKey"
+                                        gers.Seek "=", "作業担当者コード"
+                                        
+                                        If gers.NoMatch = False Then
+                                            gers.Edit
+                                            gers!Value = lors!Value
+                                            gers.Update
+                                        End If
+                                    End If
+                                    
+                                    lors.Index = "PrimaryKey"
+                                    lors.Seek "=", "入力マシン"
+                                    
+                                    If lors.NoMatch = False Then
+                                        gers.Index = "PrimaryKey"
+                                        gers.Seek "=", "入力マシン"
+                                        
+                                        If gers.NoMatch = False Then
+                                            gers.Edit
+                                            gers!Value = lors!Value
+                                            gers.Update
+                                        End If
+                                    End If
+                                    
+                                    lors.Index = "PrimaryKey"
+                                    lors.Seek "=", "部門コード"
+
+                                    If lors.NoMatch = False Then
+                                        gers.Index = "PrimaryKey"
+                                        gers.Seek "=", "部門コード"
+                                        
+                                        If gers.NoMatch = False Then
+                                        gers.Edit
+                                        gers!Value = lors!Value
+                                        gers.Update
+                                        End If
+                                    End If
+                                                                        
+                                Case "BAK_作業報告"
+                                    '//カレントDBファイルのテーブルをコピーしてきた原本ファイルのテーブルにインポート
+                                    DoCmd.TransferDatabase acExport, "Microsoft Access", Application.CurrentProject.Path & "\GEN_SUPPORT_PG.accdb", acTable, objTableDef.Name, objTableDef.Name
+                                
+                                Case "$DataPath"
+                                    '//カレントDBファイルのテーブルをコピーしてきた原本ファイルのテーブルにインポート
+                                    DoCmd.TransferDatabase acExport, "Microsoft Access", Application.CurrentProject.Path & "\GEN_SUPPORT_PG.accdb", acTable, objTableDef.Name, objTableDef.Name
+
+                            End Select
+
+                        Next objTableDef
+                        
+                        Set gers = Nothing
+                        Set lors = Nothing
+                        Set gedb = Nothing
+                        Set lodb = Nothing
+                        
+                        Call PutLog("SYSTEM_UPDATE()", "アップデートを終了_テーブル")
+                    
+                        Call PutLog("SYSTEM_UPDATE()", "アップデート完了(ver." & geVer & " ⇒ ver." & loVer & ")")
+                        Call V_SYS管理更新(gEnviron.GetValue("入力マシン"), "最終アップデート日時", CStr(Now))
+                        
+                        Call CreateBatchFile(Application.CurrentProject.Path) '//システム再起動用のバッチを生成
+                        
+                        MsgBox "アップデートが完了しました。システムを再起動します。"
+                        
+                        Call PutLog("アップデートに伴うシステム通常終了", "System end")
+                        
+                        Shell Application.CurrentProject.Path & "\SUPPORT_RESTART.bat", vbNormalFocus
+                        
+                        Application.Quit
+                    
+                    End If
+
+                End If
+                                
+            Else
+                '// 原本のバージョン情報が無い場合
+                Call PutLog("SYSTEM_UPDATE()", "原本バージョン情報なし")
+                MsgBox "原本バージョン情報が無いため、アップデートは実施されません。"
+                Exit Function
+            End If
+                                                                     
+            g処理中.CloseForm
+                    
+        Else
+            
+            MsgBox ("原本ファイルが存在しないか、ネットワークにエラーが発生しています。" & vbCrLf & "システム担当者に問合せて下さい． ")
+            Application.Quit
+            
+        End If
+    Else
+        '//原本ファイルを展開している場合はシステム起動のマクロを停止
+        End
+        
+    End If
+    
+    Call PutLog("SYSTEM_UPDATE()", "end")
+    
+    Exit Function
+    
+ERR:
+
+    Select Case ERR.Number
+        
+        Case 7874
+            '//処理せず
+            Resume Next
+        
+        Case Else
+        
+            Call PutLog("SYSTEM_UPDATE()", "error_" & ERR.Number)
+            MsgBox ("予期しないエラーが発生しました（" & ERR.Number & ")" & vbCrLf & ERR.Description)
+            Resume Next
+
+    End Select
+
+End Function
+
+
+Sub CreateBatchFile(Optional folderPath As String = "D:\")
+
+    Call PutLog("CreateBatchFile()", "start")
+
+    On Error GoTo ErrorHandler
+    
+    Dim fso As Object
+    Dim file As Object
+    Dim dbFileName As String
+    Dim dbPath As String
+    Dim batFilePath As String
+    Dim timestamp As String
+    Dim accessVersion As String
+    Dim accessPath As String
+    
+    ' カレントDBのパスを取得
+    dbPath = CurrentDb.Name
+    dbFileName = gFSO.GetFileName(dbPath) ' ファイル名を取得
+    batFilePath = Left(dbPath, InStrRev(dbPath, "\")) & "SUPPORT_RESTART.bat"
+    
+    ' タイムスタンプを生成 (yyyyMMddHHmmss 形式)
+    timestamp = Format(Now(), "yyyyMMddHHmmss")
+    
+    ' Accessのバージョン情報を取得
+    On Error Resume Next
+    accessVersion = Application.Version
+    On Error GoTo ErrorHandler
+    
+    ' Accessのバージョンに基づいて実行パスを設定
+    Select Case accessVersion
+        Case "16.0"
+            accessPath = "C:\Program Files (x86)\Microsoft Office\root\Office16\MSACCESS.EXE"
+        Case "15.0"
+            accessPath = "C:\Program Files (x86)\Microsoft Office\Office15\MSACCESS.EXE"
+        Case "14.0"
+            accessPath = "C:\Program Files (x86)\Microsoft Office\Office14\MSACCESS.EXE"
+        Case "12.0"
+            accessPath = "C:\Program Files (x86)\Microsoft Office\Office12\MSACCESS.EXE"
+        Case Else
+            accessPath = ""
+    End Select
+    
+    ' FileSystemObjectを使用してファイルを作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set file = fso.CreateTextFile(batFilePath, True)
+    
+    ' バッチファイルの内容を記述
+    With file
+        .WriteLine "@echo off"
+        .WriteLine ""
+        .WriteLine "echo アップデートを実行中..."
+        .WriteLine ""
+        .WriteLine "REM 旧システムが閉じるまで停止"
+        .WriteLine "timeout /t 10"
+        .WriteLine ""
+        .WriteLine "REM メッセージを表示"
+        .WriteLine "echo システムをリネーム中..."
+        .WriteLine ""
+        .WriteLine "REM 元ファイルをリネーム"
+        .WriteLine "taskkill /im MSACCESS.EXE /f >nul 2>&1"
+        .WriteLine "ren """ & folderPath & "\" & dbFileName & """ """ & timestamp & "_" & dbFileName & """"
+        .WriteLine ""
+        .WriteLine "REM リネームしたファイルを完全削除"
+        .WriteLine "del """ & folderPath & "\" & timestamp & "_" & dbFileName & """ /f /q"
+        .WriteLine ""
+        .WriteLine "REM 新しいファイルをリネーム"
+        .WriteLine "ren """ & folderPath & "\GEN_SUPPORT_PG.accdb"" """ & dbFileName & """"
+        .WriteLine ""
+        .WriteLine "REM 再起動メッセージを表示"
+        .WriteLine "echo システムを再起動します"
+        .WriteLine ""
+        .WriteLine "REM Accessファイルを起動"
+        .WriteLine "start """ & accessPath & """ """ & folderPath & "\" & dbFileName & """ /cmd ""Start"""
+    End With
+    
+    ' ファイルを閉じる
+    file.Close
+    
+    Call PutLog("CreateBatchFile()", "end")
+    
+    Exit Sub
+    
+ErrorHandler:
+    MsgBox "エラーが発生しました: " & ERR.Description, vbCritical
+    Call PutLog("CreateBatchFile()", "err")
+End Sub

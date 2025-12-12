@@ -1,0 +1,14 @@
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' 2022/03/03 h.nema
+' *************************************************************************************
+
+Global gFSO As New FileSystemObject
+Global xCE_CON As New ADODB.Connection
+Global xSUP_CON As New ADODB.Connection
+Global SPCMD As New ADODB.Command
+Global gèàóùíÜ As New clsèàóùíÜ
+Global gEnviron As New clsEnviron
+Global gUPDATE_FLG As Long

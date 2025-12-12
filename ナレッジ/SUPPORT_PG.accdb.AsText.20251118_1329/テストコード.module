@@ -1,0 +1,641 @@
+Dim ADORS As ADODB.Recordset
+Dim rs As Recordset
+Dim strSQL As String
+
+Sub AddDummyRecord(vネットワークFLG As Boolean) '//検証用にダミーのレコードを追加する
+    
+    'テーブル名を指定してレコードセットを開く
+    Set rs = CurrentDb.OpenRecordset("D_作業報告", dbOpenDynaset)
+    
+    '新しいレコードを追加
+    rs.AddNew
+    
+    '各フィールドにダミーデータを設定
+    rs!対応開始日時 = Now
+    rs!対応終了日時 = Now + 1
+    rs!顧客コード = 123
+    rs!顧客担当者名 = "Dummy Customer"
+    rs!部門コード = 456
+    rs!商品コード1 = 1001
+    rs!商品コード2 = 1002
+    rs!商品コード3 = 1003
+    rs!作業担当コード = 789
+    rs!対応区分コード = 1
+    rs!結果コード = 1
+    rs!引継担当コード = 999
+    rs!報告内容 = "This is a dummy report content."
+    rs!お客様サイン = "Dummy Signature"
+    rs!確認日付 = Date
+    rs!作成日時 = Now
+    rs!同期日時 = Now
+    rs!更新日時 = Now
+    rs!削除日時 = Null
+    rs!入力マシン = "DummyMachine"
+    rs!更新マシン = "DummyMachine"
+    rs!ネットワークFLG = vネットワークFLG
+    
+    '対応内容項目名1～20、対応内容フラグ1～20のダミーデータを設定
+    Dim i As Integer
+
+    For i = 1 To 20
+        rs("対応内容項目名" & i) = "Dummy Item " & i
+        rs("対応内容フラグ" & i) = 0
+    Next i
+    
+    'レコードを保存
+    rs.Update
+    
+    'オブジェクトのクリーンアップ
+    rs.Close
+    Set rs = Nothing
+    
+    Debug.Print "ダミーレコードが追加されました"
+    
+End Sub
+
+
+Sub DelDummyRecord()
+
+    Set ADORS = New ADODB.Recordset
+    
+    strSQL = "DELETE FROM D_作業報告 WHERE 入力マシン = 'DummyMachine'"
+    
+    Call SQLオープンセット_SUPPORTDB
+    
+    ADORS.Open strSQL, xSUP_CON, adOpenStatic, adLockReadOnly, adCmdText
+    
+    CurrentDb.Execute strSQL
+    
+    Debug.Print "ダミーレコードを削除しました"
+    
+    Set ADORS = Nothing
+
+End Sub
+
+
+Sub test_SQLオープンセット_CEWEB()
+
+    Call SQLオープンセット_CEWEB
+    
+    If Not xCE_CON Is Nothing Then
+        If xCE_CON.State = adStateOpen Then
+            Debug.Print "接続は開いています。"
+        Else
+            Debug.Print "接続が閉じています。"
+        End If
+    Else
+        Debug.Print "接続オブジェクトが設定されていません。"
+    End If
+
+End Sub
+
+
+Sub test_SQLオープンセット_SUPPORTDB()
+
+    Call SQLオープンセット_SUPPORTDB
+    
+    If Not xSUP_CON Is Nothing Then
+        If xSUP_CON.State = adStateOpen Then
+            Debug.Print "接続は開いています。"
+        Else
+            Debug.Print "接続が閉じています。"
+        End If
+    Else
+        Debug.Print "接続オブジェクトが設定されていません。"
+    End If
+
+End Sub
+
+
+''Sub test_OBJ更新モジュール_UPDATE()
+''
+''    ' 関数の呼び出し
+''    On Error GoTo testError
+''
+''    Call OBJ更新モジュール_UPDATE
+''
+''    If ADORS.RecordCount > 0 Then
+''        Debug.Print "test_サーバー同期_オフラインモード：データが書き込まれてます（検証NG）"
+''    Else
+''        Debug.Print "test_サーバー同期_オフラインモード：データの同期はありませんでした（検証OK）"
+''    End If
+''
+''    strSQL = "SELECT TOP1 FROM [$LOG] ORDER BY LOGID DESC"
+''
+''    ADORS.Open strSQL, xSUP_CON, adOpenStatic, adLockReadOnly, adCmdText
+''
+''    ' 関数が正しく実行されたか確認
+''    ' ここでは、最後のログメッセージが関数終了のログになっているか確認します
+''    If ADORS!処理内容 = "OBJ更新モジュール:end" Then
+''        Debug.Print "OBJ更新モジュール_UPDATE関数は正常に完了しました。", vbInformation
+''    Else
+''        Debug.Print "OBJ更新モジュール_UPDATE関数の実行に問題があります。", vbExclamation
+''    End If
+''
+''    Exit Sub
+''
+''testError:
+''    ' エラーが発生した場合の処理
+''    Debug.Print "エラーが発生しました。エラー番号: " & ERR.Number & " エラーメッセージ: " & ERR.Description, vbCritical
+''    Resume Next
+''End Sub
+
+
+Sub test_DB_Backup()
+
+    ' バックアップ関数の呼び出し
+    On Error GoTo testError
+
+    ' バックアップパスとファイル名を確認
+    Dim fso As Object
+    Dim strBakPath As String
+    Dim strFileName As String
+    Dim backupFilePath As String
+    
+    Call SQLオープンセット_SUPPORTDB
+
+    strFileName = DB_Backup
+
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    strBakPath = DLookup("ServerPath", "$DataPath") & "BackUp\"
+    backupFilePath = strBakPath & strFileName
+    
+    ' バックアップファイルの存在を確認
+    If fso.FileExists(backupFilePath) Then
+        Debug.Print "バックアップファイルが正しく作成されました: " & backupFilePath, vbInformation
+    Else
+        Debug.Print "バックアップファイルが存在しません。処理に問題があった可能性があります。", vbExclamation
+    End If
+    
+    Exit Sub
+
+testError:
+    ' エラーが発生した場合の処理
+    Debug.Print "エラーが発生しました。エラー番号: " & ERR.Number & " エラーメッセージ: " & ERR.Description, vbCritical
+    Resume Next
+End Sub
+
+
+Sub test_サーバー同期_オフラインモード()
+
+    Call AddDummyRecord(False) '//ダミーのレコードを作成
+    
+    Call gEnviron.PutValue("gネットワークFLG", "FALSE")
+    
+    Call SQLオープンセット_SUPPORTDB
+    
+    Call サーバー同期
+    
+    strSQL = "SELECT * FROM D_作業報告 WHERE 入力マシン = 'DummyMachine'"
+    
+    Set ADORS = New ADODB.Recordset
+    
+    ADORS.Open strSQL, xSUP_CON, adOpenStatic, adLockReadOnly, adCmdText
+    
+    If ADORS.RecordCount > 0 Then
+        Debug.Print "test_サーバー同期_オフラインモード：データが書き込まれてます（検証NG）"
+    Else
+        Debug.Print "test_サーバー同期_オフラインモード：データの同期はありませんでした（検証OK）"
+    End If
+    
+    Set ADORS = Nothing
+    
+    Call DelDummyRecord   '//ダミーのレコードを削除
+
+End Sub
+
+
+Sub test_サーバー同期_オンラインモード()
+
+    Call AddDummyRecord(False) '//ダミーのレコードを作成
+    
+    Call gEnviron.PutValue("gネットワークFLG", "TRUE")
+    
+    Call SQLオープンセット_SUPPORTDB
+    
+    Call サーバー同期
+    
+    strSQL = "SELECT * FROM D_作業報告 WHERE 入力マシン = 'DummyMachine'"
+    
+    Set ADORS = New ADODB.Recordset
+    
+    ADORS.Open strSQL, xSUP_CON, adOpenStatic, adLockReadOnly, adCmdText
+    
+    If ADORS.RecordCount > 0 Then
+        Debug.Print "test_サーバー同期_オフラインモード：データが正しく同期されてます（検証OK）"
+    Else
+        Debug.Print "test_サーバー同期_オフラインモード：データが同期されてません（検証NG）"
+    End If
+    
+    Set ADORS = Nothing
+    
+    Call DelDummyRecord   '//ダミーのレコードを削除
+
+End Sub
+
+
+Sub test_テーブル操作()
+
+    ' 定義
+    Dim vTableName As String
+    Dim vFieldName As String
+    Dim result As Variant
+    Dim vRS As DAO.Recordset
+    Dim delResult As Boolean
+    Dim readResult As Boolean
+    
+    ' テーブル名、フィールド名の設定（仮）
+    vTableName = "$ENVIRON" ' テストするテーブル名を設定
+    vFieldName = "testField" ' テストするフィールド名を設定
+   
+    ' ダミーデータのキーを設定
+    Dim vKey1 As Variant
+    vKey1 = 123 ' 仮の主キーの値（適切な値に変更してください）
+
+    CurrentDb.Execute "INSERT INTO " & vTableName & " VALUES (" & vFieldName & "," & vKey1 & ")"
+
+    ' 1. GetFieldのテスト
+    result = GetField(vTableName, vFieldName, vKey1)
+    If Not IsNull(result) Then
+        Debug.Print "GetField test Passed: " & result
+    Else
+        Debug.Print "GetField test Failed: No matching record found"
+    End If
+
+    ' 2. ReadPKのテスト
+    Set vRS = OpenDAOTable(vTableName)
+    readResult = ReadPK(vRS, vKey1)
+    If readResult Then
+        Debug.Print "ReadPK test Passed: Record found"
+    Else
+        Debug.Print "ReadPK test Failed: No record found"
+    End If
+    vRS.Close
+    
+    ' 3. DelPKのテスト（削除後の確認）
+    delResult = DelPK(vTableName, vKey1)
+    If delResult Then
+        Debug.Print "DelPK test Passed: Record deleted"
+    Else
+        Debug.Print "DelPK test Failed: No record found to delete"
+    End If
+
+    ' 4. RSReadPKのテスト
+    Set vRS = OpenDAOTable(vTableName)
+    readResult = RSReadPK(vRS, vTableName, vKey1)
+    If readResult Then
+        Debug.Print "RSReadPK test Passed: Record found"
+    Else
+        Debug.Print "RSReadPK test Failed: No record found"
+    End If
+    vRS.Close
+
+End Sub
+
+
+Sub test_ネットワーク環境チェック()
+
+    Call ネットワーク環境チェック
+    
+    Debug.Print ("ネットワークFLG：" & gEnviron.GetValue("ネットワークFLG"))
+
+End Sub
+
+
+Sub test_標準モジュール()
+
+    Dim result As String
+    Dim vDate As Date
+    Dim byteCount As Byte
+    Dim rs1 As DAO.Recordset
+    Dim rs2 As DAO.Recordset
+
+    ' テスト: CutAny 関数
+    result = CutAny("Hello World", "o")
+    If result = "Hell Wrld" Then
+        Debug.Print "CutAny test Passed"
+    Else
+        Debug.Print "CutAny test Failed: " & result
+    End If
+
+    ' テスト: KANAConv 関数
+    result = KANAConv("ｶﾞｯｷｭｳ") ' 仮のテスト文字列
+    If result = "ｶﾞﾂｷﾕｳ" Then
+        Debug.Print "KANAConv test Passed"
+    Else
+        Debug.Print "KANAConv test Failed: " & result
+    End If
+
+    ' テスト: Get月初 関数
+    vDate = Date
+    result = Get月初(vDate)
+    If result = DateSerial(Year(vDate), Month(vDate), 1) Then
+        Debug.Print "Get月初 test Passed"
+    Else
+        Debug.Print "Get月初 test Failed: " & result
+    End If
+
+    ' テスト: Get月末 関数
+    vDate = Date
+    result = Get月末(vDate)
+    If result = DateSerial(Year(vDate), Month(vDate) + 1, 0) Then
+        Debug.Print "Get月末 test Passed"
+    Else
+        Debug.Print "Get月末 test Failed: " & result
+    End If
+
+    ' テスト: Get締日年月 関数
+    vDate = Date
+    result = Get締日年月(CDate(Format(vDate, "yyyy/mm/14")), 15)
+    If result = CLng(Format(vDate, "yyyymm")) Then
+        Debug.Print "Get締日年月 test Passed"
+    Else
+        Debug.Print "Get締日年月 test Failed: " & result
+    End If
+
+    ' テスト: GetByte 関数
+    byteCount = GetByte("テスト文字列")
+    If byteCount = 12 Then
+        Debug.Print "GetByte test Passed"
+    Else
+        Debug.Print "GetByte test Failed: Byte Count = " & byteCount
+    End If
+
+    ' テスト: ATrim 関数
+    result = ATrim("   test   String  with Spaces  ")
+    If result = "testStringwithSpaces" Then
+        Debug.Print "ATrim test Passed"
+    Else
+        Debug.Print "ATrim test Failed: " & result
+    End If
+    
+    ' テスト: KRecToRec 関数（レコードセットのテスト）
+    ' ここでは、テスト用の仮テーブルを用意し、それを元にテストします
+    ' M_商品テーブルをコピーしてTEST_商品を作成
+    SQL = "SELECT * INTO TEST_商品 FROM M_商品"
+    CurrentDb.Execute SQL, dbFailOnError
+    
+    ' TEST_商品にデータが存在するか確認し、あれば削除
+    SQL = "DELETE FROM TEST_商品"
+    CurrentDb.Execute SQL, dbFailOnError
+    
+    Set rs1 = OpenDAOTable("M_商品")
+    Set rs2 = OpenDAOTable("TEST_商品")
+    
+    ' レコードの移動
+    rs1.MoveFirst
+    rs2.AddNew
+    Call KRecToRec(rs1, rs2)
+    rs2.Update
+        
+    If rs2.RecordCount > 0 Then
+        Debug.Print "KRecToRec test Passed"
+    Else
+        Debug.Print "KRecToRec test Failed: RecrodCount = " & rs2.RecordCount
+    End If
+        
+    ' クリーンアップ
+    rs1.Close
+    rs2.Close
+    Set rs1 = Nothing
+    Set rs2 = Nothing
+    
+    '//テスト用のテーブルの削除
+    SQL = "DROP TABLE TEST_商品"
+    CurrentDb.Execute SQL, dbFailOnError
+    
+End Sub
+
+
+Public Sub Test_AllClearCtrl()
+
+    ' フォーム「LoginBox」を開く
+    DoCmd.OpenForm "LoginBox"
+    
+    ' フォームが開いているかを確認
+    If KIsLoad("LoginBox") Then
+        ' フォームの全てのコントロールをクリア
+        AllClearCtrl "LoginBox"
+        
+        ' 全てのコントロールがクリアされていることを確認
+        Dim frm As Form
+        Set frm = Forms("LoginBox")
+        Dim ctrl As Control
+        
+        For Each ctrl In frm.Controls
+            ' Value プロパティを持つコントロールに限定する
+            Select Case TypeName(ctrl)
+                Case "TextBox", "ComboBox", "ListBox", "OptionGroup", "CheckBox", "OptionButton"
+                    If Nz(ctrl.Value, 0) <> 0 Then
+                        MsgBox "AllClearCtrl test Failed: コントロールがクリアされていません", vbCritical
+                        Exit Sub
+                    End If
+            End Select
+        Next ctrl
+        
+        Debug.Print "AllClearCtrl test Passed"
+    Else
+        Debug.Print "AllClearCtrl test Failed: フォームが開かれていません"
+    End If
+    
+    ' フォームを閉じる
+    DoCmd.Close acForm, "LoginBox"
+
+End Sub
+
+
+Public Sub Test_KSwitchForm()
+
+    ' フォーム「LoginBox」を開いて切り替えをテスト
+    KSwitchForm "LoginBox"
+    
+    ' フォームが開かれているか確認
+    If KIsLoad("LoginBox") Then
+        Debug.Print "KSwitchForm test Passed"
+    Else
+        Debug.Print "KSwitchForm test Failed: フォームが開かれていません"
+    End If
+    
+    ' フォームを閉じる
+    DoCmd.Close acForm, "LoginBox"
+
+End Sub
+
+
+Public Sub Test_OpenForm()
+
+    ' フォーム「LoginBox」を開いてテスト
+    OpenForm "LoginBox"
+    
+    ' フォームが開かれているか確認
+    If KIsLoad("LoginBox") Then
+        Debug.Print "OpenForm test Passed"
+    Else
+        Debug.Print "OpenForm test Failed: フォームが開かれていません"
+    End If
+    
+    ' フォームを閉じる
+    DoCmd.Close acForm, "LoginBox"
+
+End Sub
+
+
+Public Sub Test_PutLog()
+
+    ' ダミーデータをログに挿入するテスト
+    PutLog "Test Process", "Test Result"
+    
+    ' ダミーデータが正しく追加されたかを確認
+    Dim rs As Recordset
+    Set rs = CurrentDb.OpenRecordset("SELECT TOP 1 * FROM [$LOG] ORDER BY LOGID DESC")
+    
+    If Not rs.EOF Then
+        If rs!処理内容 = "Test Process" And rs!実行結果 = "Test Result" Then
+            Debug.Print "PutLog test Passed"
+        Else
+            Debug.Print "PutLog test Failed: データが正しく追加されませんでした"
+        End If
+    Else
+        Debug.Print "PutLog test Failed: データが見つかりません"
+    End If
+    
+    Set rs = Nothing
+
+End Sub
+
+
+Public Sub Test_DelOldLog()
+    
+    'ログテーブルの中身をバックアップ
+    SQL = "SELECT * INTO BAK_LOG FROM [$LOG]"
+    CurrentDb.Execute SQL, dbFailOnError
+
+    ' ダミーレコードを追加してから削除するテスト
+    Dim i As Long
+    Dim rs As DAO.Recordset
+    
+    Set rs = OpenDAOTable("$LOG")
+    
+    If rs.RecordCount < 100000 Then
+        For i = rs.RecordCount To 100000
+            PutLog "Dummy Process " & i, "Dummy Result"
+        Next i
+    End If
+    
+    ' 古いログを削除
+    DelOldLog
+    
+    ' 削除が正しく行われたかを確認
+    Dim maxID As Long
+    maxID = Nz(DMax("LOGID", "$LOG"), 0)
+    
+    If maxID <= 100000 Then
+        Debug.Print "DelOldLog test Passed"
+    Else
+        Debug.Print "DelOldLog test Failed: データが正しく削除されませんでした"
+    End If
+    
+    '//ログテーブルの中身をクリア
+    SQL = "DELETE FROM [$LOG]"
+    CurrentDb.Execute SQL, dbFailOnError
+
+    '//バックアップからデータを戻す
+    SQL = "INSERT INTO [$LOG] SELECT * FROM BAK_LOG"
+    CurrentDb.Execute SQL, dbFailOnError
+
+    '//バックアップテーブルを削除
+    SQL = "DROP TABLE BAK_LOG"
+    CurrentDb.Execute SQL, dbFailOnError
+
+End Sub
+
+
+Public Sub Test_V_マスタ取込()
+
+    ' ダミーテーブルを作成
+    CurrentDb.Execute "CREATE TABLE DummyWork (ID AUTOINCREMENT, Name TEXT(50))"
+    
+    ' マスタ取込関数をテスト
+    V_マスタ取込 "DummyMaster", "DummyWork"
+    
+    ' データが取り込まれたかを確認
+    Dim rs As Recordset
+    Set rs = CurrentDb.OpenRecordset("SELECT * FROM DummyWork")
+    
+    If Not rs.EOF Then
+        MsgBox "Test_V_マスタ取込が正常に実行されました", vbInformation
+    Else
+        MsgBox "Test_V_マスタ取込: データが取り込まれませんでした", vbCritical
+    End If
+    
+    Set rs = Nothing
+    
+    ' ダミーテーブルを削除
+    CurrentDb.Execute "DROP TABLE DummyWork"
+
+End Sub
+
+
+Sub test_API()
+
+    ' テスト: GetPCName 関数
+    Dim pcName As String
+    On Error Resume Next
+    pcName = GetPCName()
+    If ERR.Number = 0 And Len(pcName) > 0 Then
+        Debug.Print "GetPCName test Passed: " & pcName
+    Else
+        Debug.Print "GetPCName test Failed: " & ERR.Description
+    End If
+    On Error GoTo 0
+    
+    ' テスト: ExpPDF 関数
+    On Error Resume Next
+    Call ExpPDF("YourReportName") ' レポート名を適切に設定してください
+    If ERR.Number = 0 Then
+        Debug.Print "ExpPDF test Passed"
+    Else
+        Debug.Print "ExpPDF test Failed: " & ERR.Description
+    End If
+    On Error GoTo 0
+    
+    ' テスト: ExpExcel 関数
+    On Error Resume Next
+    Call ExpExcel("YourTableName") ' テーブル名を適切に設定してください
+    If ERR.Number = 0 Then
+        Debug.Print "ExpExcel test Passed"
+    Else
+        Debug.Print "ExpExcel test Failed: " & ERR.Description
+    End If
+    On Error GoTo 0
+
+End Sub
+
+
+''Sub test_OBJ更新_UPDATE()
+''
+''    ' 関数の呼び出し
+''    On Error GoTo testError
+''
+''    Call OBJ更新モジュール_UPDATE
+''
+''    strSQL = "SELECT TOP1 FROM [$LOG] ORDER BY LOGID DESC"
+''
+''    ADORS.Open strSQL, xSUP_CON, adOpenStatic, adLockReadOnly, adCmdText
+''
+''    ' 関数が正しく実行されたか確認
+''    ' ここでは、最後のログメッセージが関数終了のログになっているか確認します
+''    If ADORS!処理内容 = "SYSTEM_UPDATE()" Then
+''        Debug.Print "OBJ更新_UPDATE関数は正常に完了しました。", vbInformation
+''    Else
+''        Debug.Print "OBJ更新_UPDATE関数の実行に問題があります。", vbExclamation
+''    End If
+''
+''    Exit Sub
+''
+''testError:
+''    ' エラーが発生した場合の処理
+''    Debug.Print "エラーが発生しました。エラー番号: " & ERR.Number & " エラーメッセージ: " & ERR.Description, vbCritical
+''    Resume Next
+''End Sub

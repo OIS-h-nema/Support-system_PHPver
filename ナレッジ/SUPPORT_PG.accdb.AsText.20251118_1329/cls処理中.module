@@ -1,0 +1,138 @@
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' 2010/05/25
+' 2010/10/14 MemoBox
+' 2010/10/14 LoginBox
+' 2010/12/01 Echo_Refresh
+' 2011/10/19 PermissionBox
+' *************************************************************************************
+
+Public Function PermissionBox()
+
+'//-----------------------------------------
+'// 承認担当
+'//-----------------------------------------
+
+    If IsLoad("PermissionBox") = True Then
+        DoCmd.Close acForm, "PermissionBox"
+    End If
+        
+    DoCmd.OpenForm "PermissionBox", , , , , acDialog
+
+End Function
+
+
+Public Function LoginBox(Optional vLevel As Long = 0)
+
+'//-----------------------------------------
+'// ログイン判定フォーム
+'//-----------------------------------------
+
+    If IsLoad("LoginBox") = True Then
+        DoCmd.Close acForm, "LoginBox"
+    End If
+        
+    DoCmd.OpenForm "LoginBox", , , , , acDialog, vLevel
+
+End Function
+
+
+Public Function MemoBox(vMSG As String)
+
+'//-----------------------------------------
+'// 拡大表示用のフォーム
+'//-----------------------------------------
+
+    If IsLoad("MemoBox") = True Then
+        DoCmd.Close acForm, "MemoBox"
+    End If
+    
+    DoCmd.OpenForm "MemoBox", , , , , , vMSG
+
+End Function
+
+
+Public Function Echo_Refresh(vMSG As String)
+
+'//-----------------------------------------
+'// 進捗カウンタを更新する
+'//-----------------------------------------
+
+    Form_WaitForm.MSG2.Visible = True
+
+    Form_WaitForm.MSG2 = vMSG
+    DoCmd.RepaintObject
+    
+End Function
+
+
+Public Function Show(vMSG As String, _
+                  Optional vTimer As Long = 500, _
+                  Optional vCaption As String = " ")
+
+'//-----------------------------------------
+'// Form[処理中表示]を開く
+'//-----------------------------------------
+
+    If IsLoad("WaitForm") = True Then
+        Call CloseForm
+    End If
+    
+    DoCmd.OpenForm "WaitForm", , , , , , vMSG
+    Form_WaitForm.Caption = vCaption
+    DoCmd.RepaintObject
+    Form_WaitForm.TimerInterval = vTimer
+
+End Function
+
+
+Public Function Echo(vMSG As String, Optional vCaption As String = " ")
+
+'//-----------------------------------------
+'// Form[処理中表示]にメッセージを表示する
+'//-----------------------------------------
+
+    If IsLoad("WaitForm") = False Then
+        Call Show(vMSG, 0, vCaption)
+    Else
+        Form_WaitForm.MSG = vMSG
+        Form_WaitForm.Caption = vCaption
+        DoCmd.RepaintObject
+    End If
+
+End Function
+
+
+Public Function CloseForm()
+
+'//-----------------------------------------
+'// Form[処理中表示]を閉じる
+'//-----------------------------------------
+
+    If IsLoad("WaitForm") Then DoCmd.Close acForm, "WaitForm", acSaveYes
+
+End Function
+
+
+Private Function IsLoad(FormName As String) As Boolean
+
+'//-----------------------------------------
+'// ロードされているかを確認
+'//-----------------------------------------
+
+    Dim var As Variant
+    
+    IsLoad = False
+    For Each var In Forms
+        If var.Name = FormName Then
+            IsLoad = True
+        End If
+    Next
+
+End Function

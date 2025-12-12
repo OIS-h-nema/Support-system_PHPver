@@ -1,0 +1,132 @@
+Option Compare Database
+Option Explicit
+
+Public Function サーバー同期()
+
+    Call PutLog("サーバー同期()", "start")
+   
+    If CBool(gEnviron.GetValue("gネットワークFLG")) = False Then Exit Function
+
+    Dim lcl作業報告 As Recordset
+    Dim vNow As Date: vNow = Now()
+    Dim count_作業報告 As Long: count_作業報告 = 0 '//ログファイル用
+        
+    '//各テーブルをオブジェクト実体化
+    Set lcl作業報告 = OpenDAOTable("D_作業報告")
+    
+    '//ローカルテーブルに「ネットワークFLG = false」のフィルタをかけてオブジェクトを開き直し
+    
+    '//データをループ処理
+    Do Until lcl作業報告.EOF
+        
+        If lcl作業報告!ネットワークFLG = False Then
+                        
+            g処理中.Echo_Refresh "データを同期中..."
+            
+            count_作業報告 = count_作業報告 + 1
+            
+            If xSUP_CON.State = 0 Then
+                Call SQLオープンセット_SUPPORTDB
+            End If
+                       
+            SPCMD.CommandText = "UPD_D_作業報告"
+            SPCMD.Parameters.Refresh
+            
+            SPCMD.Parameters("@SEQNO") = Nz(lcl作業報告!SEQNO, 0)
+            
+            SPCMD.Parameters("@対応開始日時") = Nz(lcl作業報告!対応開始日時, vNow)
+            SPCMD.Parameters("@対応終了日時") = Nz(lcl作業報告!対応終了日時, vNow)
+            SPCMD.Parameters("@顧客コード") = Nz(lcl作業報告!顧客コード, 0)
+            SPCMD.Parameters("@顧客担当者名") = Nz(lcl作業報告!顧客担当者名, Null)
+            SPCMD.Parameters("@部門コード") = Nz(lcl作業報告!部門コード, gEnviron.GetValue("部門コード"))
+            
+            SPCMD.Parameters("@商品コード1") = Nz(lcl作業報告!商品コード1, 0)
+            SPCMD.Parameters("@商品コード2") = Nz(lcl作業報告!商品コード2, 0)
+            SPCMD.Parameters("@商品コード3") = Nz(lcl作業報告!商品コード3, 0)
+            SPCMD.Parameters("@作業担当コード") = Nz(lcl作業報告!作業担当コード, gEnviron.GetValue("作業担当コード"))
+            SPCMD.Parameters("@対応区分コード") = Nz(lcl作業報告!対応区分コード, 0)
+            
+            SPCMD.Parameters("@結果コード") = Nz(lcl作業報告!結果コード, 0)
+            SPCMD.Parameters("@引継担当コード") = Nz(lcl作業報告!引継担当コード, 0)
+            SPCMD.Parameters("@報告内容") = Nz(lcl作業報告!報告内容, Null)
+            SPCMD.Parameters("@お客様サイン") = Nz(lcl作業報告!お客様サイン, Null)
+            SPCMD.Parameters("@確認日付") = Nz(lcl作業報告!確認日付, Null)
+            
+            SPCMD.Parameters("@作成日時") = Nz(lcl作業報告!作成日時, vNow)
+            SPCMD.Parameters("@同期日時") = vNow
+            SPCMD.Parameters("@更新日時") = Nz(lcl作業報告!更新日時, Null)
+            SPCMD.Parameters("@削除日時") = Nz(lcl作業報告!削除日時, Null)
+            SPCMD.Parameters("@入力マシン") = Nz(lcl作業報告!入力マシン, gEnviron.GetValue("入力マシン"))
+            
+            SPCMD.Parameters("@更新マシン") = Nz(lcl作業報告!更新マシン, Null)
+            SPCMD.Parameters("@ネットワークFLG") = True
+            
+            SPCMD.Parameters("@対応内容項目名1") = Nz(lcl作業報告!対応内容項目名1, Null)
+            SPCMD.Parameters("@対応内容項目名2") = Nz(lcl作業報告!対応内容項目名2, Null)
+            SPCMD.Parameters("@対応内容項目名3") = Nz(lcl作業報告!対応内容項目名3, Null)
+            SPCMD.Parameters("@対応内容項目名4") = Nz(lcl作業報告!対応内容項目名4, Null)
+            
+            SPCMD.Parameters("@対応内容項目名5") = Nz(lcl作業報告!対応内容項目名5, Null)
+            SPCMD.Parameters("@対応内容項目名6") = Nz(lcl作業報告!対応内容項目名6, Null)
+            SPCMD.Parameters("@対応内容項目名7") = Nz(lcl作業報告!対応内容項目名7, Null)
+            SPCMD.Parameters("@対応内容項目名8") = Nz(lcl作業報告!対応内容項目名8, Null)
+            SPCMD.Parameters("@対応内容項目名9") = Nz(lcl作業報告!対応内容項目名9, Null)
+            
+            SPCMD.Parameters("@対応内容項目名10") = Nz(lcl作業報告!対応内容項目名10, Null)
+            SPCMD.Parameters("@対応内容項目名11") = Nz(lcl作業報告!対応内容項目名11, Null)
+            SPCMD.Parameters("@対応内容項目名12") = Nz(lcl作業報告!対応内容項目名12, Null)
+            SPCMD.Parameters("@対応内容項目名13") = Nz(lcl作業報告!対応内容項目名13, Null)
+            SPCMD.Parameters("@対応内容項目名14") = Nz(lcl作業報告!対応内容項目名14, Null)
+            
+            SPCMD.Parameters("@対応内容項目名15") = Nz(lcl作業報告!対応内容項目名15, Null)
+            SPCMD.Parameters("@対応内容項目名16") = Nz(lcl作業報告!対応内容項目名16, Null)
+            SPCMD.Parameters("@対応内容項目名17") = Nz(lcl作業報告!対応内容項目名17, Null)
+            SPCMD.Parameters("@対応内容項目名18") = Nz(lcl作業報告!対応内容項目名18, Null)
+            SPCMD.Parameters("@対応内容項目名19") = Nz(lcl作業報告!対応内容項目名19, Null)
+            
+            SPCMD.Parameters("@対応内容項目名20") = Nz(lcl作業報告!対応内容項目名20, Null)
+            SPCMD.Parameters("@対応内容フラグ1") = Nz(lcl作業報告!対応内容フラグ1, False)
+            SPCMD.Parameters("@対応内容フラグ2") = Nz(lcl作業報告!対応内容フラグ2, False)
+            SPCMD.Parameters("@対応内容フラグ3") = Nz(lcl作業報告!対応内容フラグ3, False)
+            SPCMD.Parameters("@対応内容フラグ4") = Nz(lcl作業報告!対応内容フラグ4, False)
+            
+            SPCMD.Parameters("@対応内容フラグ5") = Nz(lcl作業報告!対応内容フラグ5, False)
+            SPCMD.Parameters("@対応内容フラグ6") = Nz(lcl作業報告!対応内容フラグ6, False)
+            SPCMD.Parameters("@対応内容フラグ7") = Nz(lcl作業報告!対応内容フラグ7, False)
+            SPCMD.Parameters("@対応内容フラグ8") = Nz(lcl作業報告!対応内容フラグ8, False)
+            SPCMD.Parameters("@対応内容フラグ9") = Nz(lcl作業報告!対応内容フラグ9, False)
+            
+            SPCMD.Parameters("@対応内容フラグ10") = Nz(lcl作業報告!対応内容フラグ10, False)
+            SPCMD.Parameters("@対応内容フラグ11") = Nz(lcl作業報告!対応内容フラグ11, False)
+            SPCMD.Parameters("@対応内容フラグ12") = Nz(lcl作業報告!対応内容フラグ12, False)
+            SPCMD.Parameters("@対応内容フラグ13") = Nz(lcl作業報告!対応内容フラグ13, False)
+            SPCMD.Parameters("@対応内容フラグ14") = Nz(lcl作業報告!対応内容フラグ14, False)
+            
+            SPCMD.Parameters("@対応内容フラグ15") = Nz(lcl作業報告!対応内容フラグ15, False)
+            SPCMD.Parameters("@対応内容フラグ16") = Nz(lcl作業報告!対応内容フラグ16, False)
+            SPCMD.Parameters("@対応内容フラグ17") = Nz(lcl作業報告!対応内容フラグ17, False)
+            SPCMD.Parameters("@対応内容フラグ18") = Nz(lcl作業報告!対応内容フラグ18, False)
+            SPCMD.Parameters("@対応内容フラグ19") = Nz(lcl作業報告!対応内容フラグ19, False)
+            
+            SPCMD.Parameters("@対応内容フラグ20") = Nz(lcl作業報告!対応内容フラグ20, False)
+                           
+            SPCMD.Execute
+                                                          
+        End If
+            
+        lcl作業報告.MoveNext
+            
+    '//ループ終了
+    Loop
+    
+    If count_作業報告 > 0 Then
+        Call V_SYS管理更新(gEnviron.GetValue("入力マシン"), "最終同期日時", CStr(Now))
+    End If
+    
+    Call PutLog("サーバー同期()", "処理結果(作業報告" & count_作業報告 & "件)")
+    Call PutLog("サーバー同期()", "end")
+    
+    '//以降、オブジェクトの解放
+    Set lcl作業報告 = Nothing
+
+End Function

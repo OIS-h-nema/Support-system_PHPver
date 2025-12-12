@@ -1,0 +1,67 @@
+Option Compare Database
+Option Explicit
+
+Public Function StartUP()
+
+    Call PutLog("StartUP()", "start")
+
+    Dim ADORS As ADODB.Recordset
+    Dim strSQL As String
+
+    '//ナビゲーションウィンドウの非表示
+    DoCmd.NavigateTo "acNavigationCategoryObjectType", ""
+    DoCmd.RunCommand acCmdWindowHide
+    
+    '//リボンの非表示
+    DoCmd.ShowToolbar "Ribbon", acToolbarNo
+
+    '//--------------------------
+    '// SQL接続・マスタ取込
+    '//--------------------------
+    g処理中.Echo "", Now()
+    
+    Call ネットワーク環境チェック
+    
+    If CBool(gEnviron.GetValue("gネットワークFLG")) = True Then
+
+        Call V_SYS管理更新(gEnviron.GetValue("入力マシン"), "ver", gEnviron.GetValue("ver"))
+        Call V_SYS管理更新(gEnviron.GetValue("入力マシン"), "作業担当者コード", gEnviron.GetValue("作業担当者コード"))
+        Call V_SYS管理更新(gEnviron.GetValue("入力マシン"), "最終オンライン起動日時", CStr(Now))
+
+        Call サーバー同期
+        
+        Call DB_Backup
+        
+        Call SYSTEM_UPDATE
+               
+        Call AddVBExtensibilityReference
+        
+        Call DeleteAllTempModules
+        
+        Call SQLオープンセット_CEWEB
+        
+        Call SQLオープンセット_SUPPORTDB
+        
+        Call マスタ取込み
+
+        Call 作業報告データ取得
+    
+    End If
+    
+    Call gEnviron.PutValue("入力マシン", CStr(GetPCName()))
+    
+    If gEnviron.GetValue("デバッグモード") = "" Then
+        DoCmd.RunSQL "INSERT INTO [$ENVIRON]([KEY], [VALUE]) VALUES('デバッグモード', 0)"
+    End If
+    
+    g処理中.CloseForm
+    
+    If Nz(gEnviron.GetValue("部門コード"), 0) = 0 Or Nz(gEnviron.GetValue("作業担当者コード"), 0) = 0 Then
+        DoCmd.OpenForm "LoginBox"
+    End If
+    
+    DoCmd.OpenForm "サポート報告_一覧表"
+    
+    Call PutLog("StartUP()", "end")
+
+End Function

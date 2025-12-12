@@ -1,0 +1,4 @@
+Name, Type, Size, Option
+, KEY, Text, 50
+, VALUE, Text, 255
+,{Index}PrimaryKey,+KEY,

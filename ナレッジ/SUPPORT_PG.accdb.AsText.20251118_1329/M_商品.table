@@ -1,0 +1,8 @@
+Name, Type, Size, Option
+, 商品コード, Long, 4
+, 部門コード, Long, 4
+, 商品名, Text, 255
+, 使用区分, Long, 4
+, 更新日時, DateTime, 8
+, 入力マシン, Text, 255
+,{Index}PrimaryKey,+商品コード,

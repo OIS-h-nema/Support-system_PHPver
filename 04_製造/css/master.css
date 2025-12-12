@@ -1,0 +1,409 @@
+/**
+ * ファイル名: master.css
+ * 機能概要: マスタ設定画面用CSS
+ * 作成日: 2025-11-25
+ * 作成者: Claude AI
+ * 
+ * 修正履歴:
+ * 2025-11-25 新規作成（Phase 08）
+ */
+
+/* ====================================
+   マスタ設定画面共通スタイル
+   ==================================== */
+
+.master-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #fff;
+    min-height: 100vh;
+}
+
+/* ヘッダー */
+.master-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #2563eb;
+}
+
+.master-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e3a5f;
+    margin: 0;
+}
+
+.master-close-btn {
+    padding: 6px 15px;
+    font-size: 14px;
+    color: #666;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.master-close-btn:hover {
+    background: #e5e7eb;
+    color: #333;
+}
+
+/* メッセージエリア */
+.master-message-area {
+    margin-bottom: 15px;
+}
+
+.master-message-area .success-box,
+.master-message-area .error-box {
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 0;
+}
+
+/* 入力エリア */
+.master-input-area {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.master-input-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.master-input-row:last-child {
+    margin-bottom: 0;
+}
+
+.master-input-row label {
+    width: 120px;
+    min-width: 120px;
+    font-weight: 500;
+    color: #374151;
+    padding-top: 6px;
+}
+
+.master-input-row label.required::after {
+    content: ' *';
+    color: #dc3545;
+}
+
+.master-input-row .input-field {
+    flex: 1;
+}
+
+.master-input-row input[type="text"],
+.master-input-row input[type="number"],
+.master-input-row select,
+.master-input-row textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.master-input-row input[type="text"]:focus,
+.master-input-row input[type="number"]:focus,
+.master-input-row select:focus,
+.master-input-row textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.master-input-row input.readonly,
+.master-input-row input[readonly] {
+    background: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.master-input-row textarea {
+    min-height: 150px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.master-input-row select {
+    cursor: pointer;
+}
+
+.master-input-row select:disabled {
+    background: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+/* 入力エリア内のヒント */
+.input-hint {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* 入力エリア内のボタン */
+.master-input-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* フィルタエリア */
+.master-filter-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    background: #f3f4f6;
+    border-radius: 4px;
+}
+
+.master-filter-area label {
+    font-size: 13px;
+    color: #374151;
+}
+
+.master-filter-area select {
+    padding: 5px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+/* 一覧エリア */
+.master-list-area {
+    margin-bottom: 20px;
+}
+
+.master-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.master-table th,
+.master-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.master-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    font-size: 13px;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.master-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.master-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.master-table .no-data {
+    text-align: center;
+    padding: 30px;
+    color: #6b7280;
+}
+
+.master-table .text-cell {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.master-table .text-muted {
+    color: #9ca3af;
+}
+
+.master-table .action-cell {
+    white-space: nowrap;
+    text-align: center;
+    width: 150px;
+}
+
+/* フッターエリア */
+.master-footer-area {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 15px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* 注意書き */
+.master-note {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 4px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: #92400e;
+}
+
+/* ====================================
+   ボタンスタイル（共通上書き）
+   ==================================== */
+
+.master-container .btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.master-container .btn-primary {
+    background: #2563eb;
+    color: #fff;
+    border: 1px solid #2563eb;
+}
+
+.master-container .btn-primary:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.master-container .btn-outline {
+    background: #fff;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.master-container .btn-outline:hover {
+    background: #f3f4f6;
+}
+
+.master-container .btn-danger {
+    background: #dc3545;
+    color: #fff;
+    border: 1px solid #dc3545;
+}
+
+.master-container .btn-danger:hover {
+    background: #c82333;
+    border-color: #c82333;
+}
+
+.master-container .btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+/* ====================================
+   レスポンシブ対応
+   ==================================== */
+
+@media screen and (max-width: 768px) {
+    .master-container {
+        padding: 15px;
+    }
+    
+    .master-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .master-header h1 {
+        font-size: 18px;
+    }
+    
+    .master-input-row {
+        flex-direction: column;
+    }
+    
+    .master-input-row label {
+        width: 100%;
+        margin-bottom: 5px;
+        padding-top: 0;
+    }
+    
+    .master-input-row .input-field {
+        width: 100%;
+    }
+    
+    .master-filter-area {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .master-filter-area select {
+        width: 100%;
+    }
+    
+    .master-table {
+        font-size: 13px;
+    }
+    
+    .master-table th,
+    .master-table td {
+        padding: 8px 10px;
+    }
+    
+    .master-table .action-cell {
+        width: auto;
+    }
+    
+    .master-table .action-cell .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .master-table .action-cell .btn:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* ====================================
+   商品マスタ固有スタイル
+   ==================================== */
+
+.master-table .col-bumon { width: 100px; }
+.master-table .col-code { width: 80px; text-align: right; }
+.master-table .col-name { width: auto; }
+.master-table .col-use { width: 100px; text-align: center; }
+.master-table .col-date { width: 130px; }
+.master-table .col-action { width: 150px; text-align: center; }
+
+/* ====================================
+   定型文マスタ固有スタイル
+   ==================================== */
+
+.master-table .col-text {
+    width: auto;
+    max-width: 350px;
+}
+
+/* ====================================
+   対応内容項目マスタ固有スタイル
+   ==================================== */
+
+.code-range-note {
+    color: #666;
+    font-size: 12px;
+}

@@ -1,0 +1,148 @@
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' 接続サーバ情報
+' *************************************************************************************
+
+Dim ProviderName As String
+Dim ServerName As String
+Dim DBName As String
+Dim UserID As String
+Dim PWord As String
+
+
+Public Function SQLオープンセット_CEWEB()
+
+    Call PutLog("SQLオープンセット_CEWEB()", "start")
+
+'//-----------------------------------------------------
+    On Error GoTo ErrorADODB:
+'//-----------------------------------------------------
+
+'// ★★　DELDATAの接続情報も変更すること
+    
+    ServerName = "CEWEB"
+    DBName = "CeCrm"
+    UserID = "sa"
+    PWord = "SqlServer2014"
+    
+    ProviderName = "SQLOLEDB"
+    
+    Set xCE_CON = New ADODB.Connection
+    
+    xCE_CON.ConnectionString = "Provider=" & ProviderName & _
+                          ";Data Source=" & ServerName & _
+                          ";Initial Catalog=" & DBName & _
+                          ";User ID=" & UserID & _
+                          ";Password=" & PWord
+                          
+    Call PutLog("SQLオープンセット_CEWEB():" & xCE_CON.ConnectionString)
+    
+    xCE_CON.Open
+    xCE_CON.CursorLocation = adUseClient
+        
+    '//ストアドコマンド設定
+    Set SPCMD = New ADODB.Command
+    SPCMD.ActiveConnection = xCE_CON
+    SPCMD.CommandType = adCmdStoredProc
+    SPCMD.CommandTimeout = 0
+    
+    Call PutLog("SQLオープンセット_CEWEB()", "end")
+
+Exit Function
+
+'//-----------------------------------------------------
+ErrorADODB:
+
+    '// エラー処理
+    Dim stMsg As String
+    Dim xErr As ADODB.Error
+    
+    If xCE_CON.Errors.Count > 0 Then
+        '//エラーメッセージ
+        For Each xErr In xCE_CON.Errors
+            stMsg = stMsg & xErr.Description & vbCrLf
+        Next
+        
+''    MsgBox stMsg
+        
+    End If
+    
+    Call PutLog("SQLオープンセット()", "error")
+    
+    MsgBox "サーバ接続エラー [ " & ServerName & " ]", vbCritical
+    Set xCE_CON = Nothing
+    
+    '// 強制終了
+    Application.Quit
+    
+End Function
+
+
+Public Function SQLオープンセット_SUPPORTDB()
+
+    Call PutLog("SQLオープンセット_SUPPORTDB()", "start")
+
+'//-----------------------------------------------------
+    On Error GoTo ErrorADODB:
+'//-----------------------------------------------------
+
+'// ★★　DELDATAの接続情報も変更すること
+    
+    ServerName = "DEV-SE02\SQL22"
+    DBName = "SUPPORTDB"
+    UserID = "sa"
+    PWord = "OIS8973113fmv"
+
+    ProviderName = "SQLOLEDB"
+    
+    Set xSUP_CON = New ADODB.Connection
+    
+    xSUP_CON.ConnectionString = "Provider=" & ProviderName & _
+                          ";Data Source=" & ServerName & _
+                          ";Initial Catalog=" & DBName & _
+                          ";User ID=" & UserID & _
+                          ";Password=" & PWord
+                          
+    Call PutLog("SQLオープンセット_SUPPORTDB():" & xSUP_CON.ConnectionString)
+    
+    xSUP_CON.Open
+    xSUP_CON.CursorLocation = adUseClient
+        
+    '//ストアドコマンド設定
+    Set SPCMD = New ADODB.Command
+    SPCMD.ActiveConnection = xSUP_CON
+    SPCMD.CommandType = adCmdStoredProc
+    SPCMD.CommandTimeout = 0
+    
+    Call PutLog("SQLオープンセット_SUPPORTDB()", "end")
+
+Exit Function
+
+'//-----------------------------------------------------
+ErrorADODB:
+
+    '// エラー処理
+    Dim stMsg As String
+    Dim xErr As ADODB.Error
+    
+    If xSUP_CON.Errors.Count > 0 Then
+        '//エラーメッセージ
+        For Each xErr In xSUP_CON.Errors
+            stMsg = stMsg & xErr.Description & vbCrLf
+        Next
+        
+''    MsgBox stMsg
+        
+    End If
+    
+    Call PutLog("SQLオープンセット()", "error")
+    
+    MsgBox "サーバ接続エラー [ " & ServerName & " ]", vbCritical
+    Set xSUP_CON = Nothing
+    
+    '// 強制終了
+    Application.Quit
+    
+End Function

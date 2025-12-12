@@ -1,0 +1,6 @@
+Name, Type, Size, Option
+, 項目コード, Long, 4
+, 項目名, Text, 255
+, 更新日時, DateTime, 8
+, 入力マシン, Text, 255
+,{Index}PrimaryKey,+項目コード,

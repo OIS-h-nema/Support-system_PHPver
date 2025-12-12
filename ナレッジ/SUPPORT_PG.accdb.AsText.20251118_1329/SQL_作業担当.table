@@ -1,0 +1,6 @@
+Name, Type, Size, Option
+, 担当者コード, Long, 4
+, 部門コード, Long, 4
+, 担当者名, Text, 255
+, 更新日, DateTime, 8
+,{Index}PrimaryKey,+担当者コード,

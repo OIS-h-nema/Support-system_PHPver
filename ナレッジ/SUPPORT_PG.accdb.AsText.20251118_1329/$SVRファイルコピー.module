@@ -1,0 +1,85 @@
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' 2022/03/02 h.nema
+' *************************************************************************************
+Public Function DB_Backup() As String
+
+    Call PutLog("SVRFile_BackUp()", "start")
+
+    On Error GoTo Error_DB_Backup
+
+    Dim fso As Object
+    Dim folder As Object
+    Dim files As Object
+    Dim file As Object
+
+    Set fso = CreateObject("Scripting.FileSystemObject")
+
+    Dim strBakPath As String
+    Dim strFileName As String
+    Dim strDelFile As String
+
+    Dim oldestDate As Date: oldestDate = Now '//ファイル作成日
+
+    strBakPath = DLookup("ServerPath", "$DataPath", "TYPE=0") '//DBのバックアップディレクトリ
+    strFileName = Format(Now, "yymmddhhMMss") & gEnviron.GetValue("入力マシン") & "_SUPPORTDB.bak" '//コピーするDBのファイル名を作成
+
+    '//Buckupディレクトリがあるか確認　※なければ作成
+    If fso.FolderExists(strBakPath) = False Then
+        Call PutLog("SVRFile_BackUp()", "バックアップフォルダを作成")
+        MkDir strBakPath
+    End If
+
+    '//バックアップフォルダ内のファイルが３つ以上ある場合は古いファイルを削除---------------
+    Call PutLog("SVRFile_BackUp()", "バックアップフォルダを展開")
+
+    Set folder = fso.GetFolder(strBakPath)
+    Set files = folder.files
+
+    If files.Count > 3 Then
+
+        Call PutLog("SVRFile_BackUp():バックアップファイルが３つ以上ある為、削除処理を実行")
+
+        For Each file In files
+
+            '//ファイル作成日を比較
+            If file.DateCreated < oldestDate Then
+                oldestDate = file.DateCreated
+                strDelFile = Dir(strBakPath & file.Name)
+            End If
+
+        Next
+
+        Kill strBakPath & strDelFile
+
+    End If
+    '//バックアップフォルダ内のファイルが３つ以上ある場合は古いファイルを削除(ここまで)-----
+
+    Call PutLog("SVRFile_BackUp()", "ファイルをバックアップ")
+    
+    If xSUP_CON.State = 0 Then
+        Call SQLオープンセット_SUPPORTDB
+    End If
+
+    SPCMD.Parameters.Refresh
+    SPCMD.CommandText = "CRE_DB_BACKUP"
+    SPCMD.Parameters("@BackupPath") = strBakPath & strFileName
+    
+    SPCMD.Execute
+    
+    DB_Backup = strFileName
+
+    Exit Function
+
+
+Error_DB_Backup:
+
+    Call PutLog("DB_Backup()", "error:" & strBakPath & strFileName)
+    
+    MsgBox "データベースのバックアップ(" & strBakPath & strFileName & ")に失敗しました。「OK」を押してください。"
+        
+    Exit Function
+
+End Function

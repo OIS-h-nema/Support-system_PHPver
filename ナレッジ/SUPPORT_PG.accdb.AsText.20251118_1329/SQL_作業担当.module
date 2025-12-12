@@ -1,0 +1,87 @@
+Option Compare Database
+Option Explicit
+
+'*************************************************************************************
+'* 2022/02/25 h.nema
+'*  サーバ名：CEWEB
+'*  DB名：CeCrm
+'*  テーブル名：m_staff
+'*************************************************************************************
+
+Dim strSQL As String
+Dim rs As Recordset
+Dim ADORS As ADODB.Recordset
+
+Public Function V_担当者取得_担当者コード(v担当者コード As Long) As ADODB.Recordset
+
+'//-------------------------------------------
+'// 担当者コード(staff_code)からレコードを取得
+'//-------------------------------------------
+    Set ADORS = New ADODB.Recordset
+
+    strSQL = "SELECT * FROM m_staff"
+    strSQL = strSQL & " WHERE staff_code = " & v担当者コード
+    
+    If xCE_CON.State = 0 Then
+        Call SQLオープンセット_CEWEB
+    End If
+    
+    ADORS.Open strSQL, xCE_CON, adOpenStatic, adLockReadOnly, adCmdText
+
+    Set V_担当者取得_担当者コード = ADORS
+    Set ADORS = Nothing
+
+End Function
+
+
+Public Sub V_SQL作業担当更新()
+
+'//----------------------
+'//
+'//----------------------
+    Set ADORS = New ADODB.Recordset
+
+    strSQL = "SELECT * FROM m_staff"
+    strSQL = strSQL & " WHERE staff_code IS NOT NULL "
+    strSQL = strSQL & " AND update_datetime > '" & Nz(DMax("更新日", "SQL_作業担当"), "1900/01/01 00:00") & "'"
+    
+''    Debug.Print strSQL
+    
+    If xCE_CON.State = 0 Then
+        Call SQLオープンセット_CEWEB
+    End If
+    
+    ADORS.Open strSQL, xCE_CON, adOpenStatic, adLockReadOnly, adCmdText
+    
+    If ADORS.RecordCount > 0 Then
+    
+        Set rs = OpenDAOTable("SQL_作業担当")
+    
+        Do Until ADORS.EOF
+        
+            rs.Index = "PrimaryKey"
+            rs.Seek "=", CLng(ADORS!staff_code)
+        
+            If rs.NoMatch Then
+                rs.AddNew
+            Else
+                rs.Edit
+            End If
+        
+            rs!担当者コード = ADORS!staff_code
+            rs!部門コード = ADORS!org_seq
+            rs!担当者名 = ADORS!staff_name
+            rs!更新日 = ADORS!update_datetime
+        
+            rs.Update
+            
+            ADORS.MoveNext
+        
+        Loop
+        
+    End If
+
+    Set ADORS = Nothing
+    Set rs = Nothing
+
+End Sub

@@ -1,0 +1,180 @@
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' 2010/05/25
+' *************************************************************************************
+
+Public Function ReadPK(vRS As Recordset _
+                        , vKey1 As Variant _
+                        , Optional vKey2 As Variant _
+                        , Optional vkey3 As Variant _
+                        , Optional vkey4 As Variant _
+                        , Optional vkey5 As Variant) As Boolean
+
+'//-----------------------------
+'// データの存在チェック
+'// [PrimaryKey]で検索
+'//-----------------------------
+
+    vRS.Index = "PrimaryKey"
+    If IsMissing(vKey2) Then
+        vRS.Seek "=", vKey1
+    ElseIf IsMissing(vkey3) Then
+        vRS.Seek "=", vKey1, vKey2
+    ElseIf IsMissing(vkey4) Then
+        vRS.Seek "=", vKey1, vKey2, vkey3
+    ElseIf IsMissing(vkey5) Then
+        vRS.Seek "=", vKey1, vKey2, vkey3, vkey4
+    Else
+        vRS.Seek "=", vKey1, vKey2, vkey3, vkey4, vkey5
+    End If
+    
+    ReadPK = Not vRS.NoMatch
+
+End Function
+
+
+Public Function DelPK(vTableName As String _
+                            , vKey1 As Variant _
+                            , Optional vKey2 As Variant _
+                            , Optional vkey3 As Variant _
+                            , Optional vkey4 As Variant _
+                            , Optional vkey5 As Variant _
+                            , Optional vIndex As String = "PrimaryKey") As Boolean
+
+'//-----------------------------
+'// レコードを削除
+'// [PrimaryKey]で検索
+'//-----------------------------
+
+    Dim vRS As Recordset
+    Set vRS = OpenDAOTable(vTableName).Clone
+    
+    vRS.Index = vIndex
+    If IsMissing(vKey2) Then
+        vRS.Seek "=", vKey1
+    ElseIf IsMissing(vkey3) Then
+        vRS.Seek "=", vKey1, vKey2
+    ElseIf IsMissing(vkey4) Then
+        vRS.Seek "=", vKey1, vKey2, vkey3
+    ElseIf IsMissing(vkey5) Then
+        vRS.Seek "=", vKey1, vKey2, vkey3, vkey4
+    Else
+        vRS.Seek "=", vKey1, vKey2, vkey3, vkey4, vkey5
+    End If
+        
+    If vRS.NoMatch Then
+        DelPK = False
+    Else
+        vRS.Delete
+        DelPK = True
+    End If
+    
+    Set vRS = Nothing
+    
+End Function
+
+
+Public Function RSReadPK(vRS As Recordset _
+                            , vTableName As String _
+                            , vKey1 As Variant _
+                            , Optional vKey2 As Variant _
+                            , Optional vkey3 As Variant _
+                            , Optional vkey4 As Variant _
+                            , Optional vkey5 As Variant _
+                            , Optional vIndex As String = "PrimaryKey") As Boolean
+
+'//-----------------------------
+'// レコードセットを取得
+'// [PrimaryKey]で検索
+'//-----------------------------
+
+    Set vRS = OpenDAOTable(vTableName).Clone
+    
+    vRS.Index = vIndex
+    If IsMissing(vKey2) Then
+        vRS.Seek "=", vKey1
+    ElseIf IsMissing(vkey3) Then
+        vRS.Seek "=", vKey1, vKey2
+    ElseIf IsMissing(vkey4) Then
+        vRS.Seek "=", vKey1, vKey2, vkey3
+    ElseIf IsMissing(vkey5) Then
+        vRS.Seek "=", vKey1, vKey2, vkey3, vkey4
+    Else
+        vRS.Seek "=", vKey1, vKey2, vkey3, vkey4, vkey5
+    End If
+        
+    RSReadPK = Not vRS.NoMatch
+
+    
+End Function
+
+
+Public Function GetField(vTableName As String _
+                            , vFieldName As String _
+                            , vKey1 As Variant _
+                            , Optional vKey2 As Variant _
+                            , Optional vkey3 As Variant _
+                            , Optional vkey4 As Variant _
+                            , Optional vkey5 As Variant) As Variant
+
+'//-----------------------------
+'// 指定したテーブルとフィールド
+'// [PrimaryKey]で検索
+'//-----------------------------
+
+    Dim rs1 As Recordset
+    
+    Set rs1 = OpenDAOTable(vTableName).Clone
+    
+    rs1.Index = "PrimaryKey"
+    If IsMissing(vKey2) Then
+        rs1.Seek "=", vKey1
+    ElseIf IsMissing(vkey3) Then
+        rs1.Seek "=", vKey1, vKey2
+    ElseIf IsMissing(vkey4) Then
+        rs1.Seek "=", vKey1, vKey2, vkey3
+    ElseIf IsMissing(vkey5) Then
+        rs1.Seek "=", vKey1, vKey2, vkey3, vkey4
+    Else
+        rs1.Seek "=", vKey1, vKey2, vkey3, vkey4, vkey5
+    End If
+    
+    If rs1.NoMatch Then
+        GetField = Null
+    Else
+        GetField = rs1.Fields(vFieldName)
+    End If
+    
+    Set rs1 = Nothing
+
+End Function
+
+
+Public Function OpenDAOTable(vTableName As String) As DAO.Recordset
+    
+    Call PutLog("OpenDAOTable(" & vTableName & ")", "start")
+
+    Dim db As Database
+    Dim rs As Recordset
+    
+    Set db = OpenDatabase(Application.CurrentProject.Path & "\" & Application.CurrentProject.Name)
+    Set rs = db.OpenRecordset(vTableName)
+    
+    On Error GoTo ErrMSG
+    
+    Set OpenDAOTable = rs
+    
+    Call PutLog("OpenDAOTable(" & vTableName & ")", "end")
+    
+    Exit Function
+
+ErrMSG:
+
+    Call PutLog("OpenDAOTable(" & vTableName & ")", "error")
+    
+    MsgBox Error
+    Exit Function
+    
+End Function

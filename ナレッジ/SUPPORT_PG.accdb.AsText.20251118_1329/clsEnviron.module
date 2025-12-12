@@ -1,0 +1,82 @@
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' 2010/05/25
+' *************************************************************************************
+
+Public Function IsExist(vkey As String) As Boolean
+
+'//-------------------------
+'// キーの存在チェック
+'//-------------------------
+    IsExist = ReadPK(CurrentDb.OpenRecordset("$ENVIRON"), Trim(vkey))
+    
+End Function
+
+
+Public Function GetValue(vkey As String) As String
+
+'//-------------------------
+'// テーブルから値を取得する
+'//-------------------------
+
+    Dim rs As Recordset
+    Set rs = CurrentDb.OpenRecordset("$ENVIRON")
+
+    If ReadPK(rs, Trim(vkey)) Then
+        GetValue = Nz(rs![Value], 0)
+    Else
+        GetValue = ""
+    End If
+    
+End Function
+
+
+Public Function Delete(vkey As String)
+
+    Call PutLog("gEnviron.Delete(" & vkey & ")", "start")
+
+'//-------------------------
+'// キーを削除する
+'//-------------------------
+
+    Dim rs As Recordset
+    Set rs = CurrentDb.OpenRecordset("$ENVIRON")
+
+    If ReadPK(rs, Trim(vkey)) Then
+        rs.Delete
+    End If
+    
+    Call PutLog("gEnviron.Delete(" & vkey & ")", "end")
+    
+End Function
+
+
+Public Function PutValue(vkey As String, vValue As String)
+
+    Call PutLog("gEnviron.PutValue(" & vkey & "," & vValue & ")", "start")
+
+'//-----------------------------
+'// 保存する(無ければ作成する)
+'//-----------------------------
+
+    Dim rs As Recordset
+    Set rs = CurrentDb.OpenRecordset("$ENVIRON")
+
+    If ReadPK(rs, Trim(vkey)) Then
+        rs.Edit
+    Else
+        rs.AddNew
+        rs![key] = Trim(vkey)
+    End If
+    rs![Value] = Trim(vValue)
+    rs.Update
+    
+    Call PutLog("gEnviron.PutValue(" & vkey & "," & vValue & ")", "end")
+    
+End Function

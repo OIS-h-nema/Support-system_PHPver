@@ -1,0 +1,30 @@
+USE [SUPPORTDB]
+GO
+
+/****** Object:  Table [dbo].[SQL_作業担当]    Script Date: 2025/12/04 16:08:31 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[SQL_作業担当](
+	[担当者コード] [bigint] NOT NULL,
+	[部門コード] [bigint] NULL,
+	[担当者名] [nvarchar](255) NULL,
+	[パスワード] [nvarchar](255) NULL,
+	[更新日] [datetime] NULL,
+ CONSTRAINT [PK__SQL_作業担当__99DFF5F260675768] PRIMARY KEY CLUSTERED 
+(
+	[担当者コード] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[SQL_作業担当]  WITH CHECK ADD  CONSTRAINT [FK_SQL_作業担当_部門] FOREIGN KEY([部門コード])
+REFERENCES [dbo].[SQL_部門] ([部門コード])
+GO
+
+ALTER TABLE [dbo].[SQL_作業担当] CHECK CONSTRAINT [FK_SQL_作業担当_部門]
+GO
+

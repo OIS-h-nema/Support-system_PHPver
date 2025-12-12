@@ -1,0 +1,29 @@
+Option Compare Database
+Option Explicit
+
+Public Function fncAutoExec()
+
+    Call PutLog("システム起動", "System start")
+
+    '***2012/03/14S 2重起動防止　マクロ:Autoexecに追加
+    
+    Dim acc As Access.Application
+    Set acc = GetObject(PathName:=Application.CurrentDb.Name)
+
+    If Not (acc.hWndAccessApp = Application.hWndAccessApp) Then
+    
+        '***受渡クリア
+        Call gEnviron.PutValue("受渡起動時に自動表示", 0)
+        
+        MsgBox "このプログラムは既に起動されています..." & Chr(13) & _
+            "2重起動が禁止されていますので開くことができません...", vbCritical, Application.CurrentDb.Name
+            
+        Call PutLog("二重起動によりシステム終了", "System End")
+            
+        Application.Quit Option:=acQuitSaveNone
+
+    End If
+
+    Set acc = Nothing
+
+End Function

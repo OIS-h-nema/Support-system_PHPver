@@ -1,0 +1,9 @@
+Name, Type, Size, Option
+, 部門コード, Long, 4
+, 定型文コード, Long, 4
+, 定型文, Memo, 0
+, 作成日, DateTime, 8
+, 作成者コード, Long, 4
+, 更新日, DateTime, 8
+, 更新者コード, Long, 4
+,{Index}PrimaryKey,+部門コード;+定型文コード,

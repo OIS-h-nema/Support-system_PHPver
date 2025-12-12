@@ -1,0 +1,34 @@
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' 2022/07/12 h.nema
+' *************************************************************************************
+
+Public Declare PtrSafe Function GetDesktopWindow Lib "user32" () As Long
+
+Public Declare PtrSafe Function GetWindowRect Lib "user32" (ByVal hWnd As Long, lpRect As RECT) As Long
+
+Public Type RECT
+  x1 As Long
+  y1 As Long
+  x2 As Long
+  y2 As Long
+End Type
+
+Global g解像度横 As Long
+Global g解像度縦 As Long
+
+Public Sub 解像度取得()
+
+    Dim typRect As RECT
+    Dim hWnd As Long
+
+    hWnd = GetDesktopWindow()
+
+    GetWindowRect hWnd, typRect
+
+    g解像度横 = typRect.x2 - typRect.x1
+    g解像度縦 = typRect.y2 - typRect.y1
+
+End Sub

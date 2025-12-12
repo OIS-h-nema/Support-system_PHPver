@@ -1,0 +1,170 @@
+/**
+ * ファイル名: tablet.css
+ * 機能概要: タブレット用スタイル（481px〜768px）
+ * 作成日: 2025-11-25
+ * 作成者: Claude AI
+ * 
+ * 修正履歴:
+ * 2025-11-25 新規作成（Phase 05）
+ */
+
+/* ================================================
+   タブレット専用スタイル（481px〜768px）
+   ================================================ */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+    
+    /* レイアウト */
+    .container {
+        padding: 0 15px;
+    }
+    
+    .main-content {
+        padding: 20px;
+        margin: 15px;
+    }
+    
+    /* ヘッダー */
+    .header {
+        padding: 12px 15px;
+    }
+    
+    .header-inner {
+        flex-wrap: wrap;
+    }
+    
+    .header-title {
+        font-size: 16px;
+    }
+    
+    .header-user {
+        font-size: 12px;
+        width: 100%;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    /* ナビゲーション */
+    .nav-inner {
+        flex-wrap: wrap;
+    }
+    
+    .nav-item {
+        padding: 10px 15px;
+        font-size: 13px;
+    }
+    
+    /* フォーム */
+    .form-control {
+        padding: 10px 12px;
+        font-size: 16px; /* iOS zoom防止 */
+    }
+    
+    /* 検索エリア */
+    .search-area {
+        padding: 15px;
+    }
+    
+    .search-row {
+        gap: 10px;
+    }
+    
+    .search-item {
+        flex: 1;
+        min-width: calc(50% - 5px);
+    }
+    
+    .search-item-full {
+        min-width: 100%;
+    }
+    
+    /* テーブル */
+    .table {
+        font-size: 13px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 8px 10px;
+    }
+    
+    .input-table th {
+        width: 120px;
+    }
+    
+    /* テーブルスクロール */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* モーダル */
+    .modal {
+        width: 95%;
+        max-height: 80vh;
+    }
+    
+    .modal-header,
+    .modal-footer {
+        padding: 12px 15px;
+    }
+    
+    .modal-body {
+        padding: 15px;
+    }
+    
+    /* ボタン */
+    .btn {
+        padding: 10px 16px;
+    }
+    
+    .btn-sm {
+        padding: 6px 10px;
+    }
+    
+    /* ページネーション */
+    .pagination a,
+    .pagination span {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    /* 横並びフォーム */
+    .form-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    /* サイドバーレイアウト（縦並びに） */
+    .layout-with-sidebar {
+        flex-direction: column;
+    }
+    
+    .layout-sidebar {
+        width: 100%;
+    }
+    
+    /* カード */
+    .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    /* ツールバー */
+    .toolbar {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .toolbar-left,
+    .toolbar-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* 結果件数表示 */
+    .result-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+}

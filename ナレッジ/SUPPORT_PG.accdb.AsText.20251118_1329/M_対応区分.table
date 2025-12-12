@@ -1,0 +1,6 @@
+Name, Type, Size, Option
+, 対応区分コード, Long, 4
+, 対応区分名, Text, 255
+, 更新日時, DateTime, 8
+, 入力マシン, Text, 255
+,{Index}PrimaryKey,+対応区分コード,

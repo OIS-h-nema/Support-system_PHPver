@@ -1,0 +1,102 @@
+Option Compare Database
+
+Public Sub 作業報告データ取得()
+    
+    Call PutLog("作業報告データ取得()", "start")
+
+    '//ローカルテーブルの中で最終の作成/更新/削除の日付の値
+    Dim v日付 As Date
+    Dim ADORS As ADODB.Recordset
+    Dim rs As Recordset
+    Dim i As Integer
+    
+    v日付 = Nz(DMax("作成日時", "D_作業報告"), #1/1/1900#)
+
+    If v日付 < Nz(DMax("更新日時", "D_作業報告"), #1/1/1900#) Then
+        v日付 = DMax("更新日時", "D_作業報告")
+    End If
+
+    If v日付 < Nz(DMax("削除日時", "D_作業報告"), #1/1/1900#) Then
+        v日付 = DMax("削除日時", "D_作業報告")
+    End If
+    
+    Set ADORS = New ADODB.Recordset
+       
+    If xSUP_CON.State = 0 Then
+        Call SQLオープンセット_SUPPORTDB
+    End If
+       
+    SPCMD.Parameters.Refresh
+    SPCMD.CommandText = "SEL_D_作業報告_同期"
+    SPCMD.Parameters("@最終更新日付") = Nz(v日付, #1/1/1900#)
+    Set ADORS = SPCMD.Execute
+        
+    If ADORS.RecordCount > 0 Then
+    
+        Set rs = OpenDAOTable("D_作業報告")
+        
+        Do Until ADORS.EOF
+                
+            rs.Index = "PrimaryKey"
+            rs.Seek "=", CLng(ADORS!SEQNO), ADORS!入力マシン
+            
+            If rs.NoMatch Then
+                rs.AddNew
+                rs!SEQNO = ADORS!SEQNO
+                rs!入力マシン = ADORS!入力マシン
+            Else
+                rs.Edit
+            End If
+        
+            rs!対応開始日時 = ADORS!対応開始日時
+            rs!対応終了日時 = ADORS!対応終了日時
+            rs!顧客コード = ADORS!顧客コード
+            rs!顧客担当者名 = ADORS!顧客担当者名
+            rs!部門コード = ADORS!部門コード
+            rs!商品コード1 = ADORS!商品コード1
+            rs!商品コード2 = ADORS!商品コード2
+            rs!商品コード3 = ADORS!商品コード3
+            rs!作業担当コード = ADORS!作業担当コード
+            rs!対応区分コード = ADORS!対応区分コード
+            rs!結果コード = ADORS!結果コード
+            rs!引継担当コード = ADORS!引継担当コード
+            rs!報告内容 = ADORS!報告内容
+            rs!お客様サイン = ADORS!お客様サイン
+            rs!確認日付 = ADORS!確認日付
+            rs!作成日時 = ADORS!作成日時
+            rs!同期日時 = ADORS!同期日時
+            rs!更新日時 = ADORS!更新日時
+            rs!削除日時 = ADORS!削除日時
+
+            rs!更新マシン = ADORS!更新マシン
+            rs!ネットワークFLG = ADORS!ネットワークFLG
+            
+            '対応内容項目名1～20、対応内容フラグ1～20
+            For i = 1 To 20
+                rs("対応内容項目名" & i) = ADORS("対応内容項目名" & i)
+                rs("対応内容フラグ" & i) = ADORS("対応内容フラグ" & i)
+            Next i
+        
+            rs.Update
+            
+            ADORS.MoveNext
+        
+        Loop
+    
+    End If
+    
+    Set rs = Nothing
+    Set ADORS = Nothing
+    
+    Call PutLog("作業報告データ取得()", "end")
+    
+    Exit Sub
+
+
+作業報告データ取得_ERR:
+
+    Call PutLog("作業報告データ取得()", "error")
+
+    Exit Sub
+    
+End Sub

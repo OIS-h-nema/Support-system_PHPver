@@ -1,0 +1,11 @@
+Name, Type, Size, Option
+, ID, Long, 4
+, ver, Single, 4
+, 修正日付, DateTime, 8
+, 修正者, Long, 4
+, 画面名, Text, 255
+, 修正箇所, Memo, 0
+, 修正内容, Memo, 0
+, お知らせFLG, Long, 4
+, 備考, Memo, 0
+,{Index}PrimaryKey,+ID,

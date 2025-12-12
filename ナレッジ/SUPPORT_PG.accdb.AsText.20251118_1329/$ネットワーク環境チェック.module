@@ -1,0 +1,46 @@
+Option Compare Database
+
+Public Function ネットワーク環境チェック(Optional vServerDir As String = "ois-dmain-svr")
+
+    Call PutLog("ネットワーク環境チェック()", "start")
+
+    On Error GoTo ERR
+
+    'GetPingStatus("192.168.0.1 等")か、GetPingStatus("コンピュータ名")
+    'Trueが返ってくれば疎通OK
+    Dim obj As Object
+    
+    If gEnviron.GetValue("gネットワークFLG") = "" Then
+        DoCmd.RunSQL "INSERT INTO [$ENVIRON]([KEY], [VALUE]) VALUES('gネットワークFLG', 'TRUE')"
+    End If
+    
+    If gEnviron.GetValue("gUPDATE_FLG") = "" Then
+        DoCmd.RunSQL "INSERT INTO [$ENVIRON]([KEY], [VALUE]) VALUES('gUPDATE_FLG', 'TRUE')"
+    End If
+    
+    '//ネットワーク接続を確認
+    For Each obj In GetObject("winmgmts:\\.\root\cimv2").ExecQuery("SELECT * FROM Win32_PingStatus" & " WHERE Address = '" & vServerDir & "'", , &H30)
+        Call gEnviron.PutValue("gネットワークFLG", IIf(Nz(obj.StatusCode, 1) = 0, "TRUE", "FALSE"))
+    Next
+        
+    Call PutLog("ネットワーク環境チェック()", "end")
+    
+    Exit Function
+    
+ERR:
+
+    Select Case ERR.Number
+        
+        Case 7874
+            '//処理せず
+            Resume Next
+        
+        Case Else
+            Call PutLog("ネットワーク環境チェック()", "error")
+        
+            MsgBox ("予期しないエラーが発生しました（" & ERR.Number & ")" & vbCrLf & ERR.Description)
+            Resume Next
+
+    End Select
+
+End Function

@@ -1,0 +1,232 @@
+Option Compare Database
+Option Explicit
+
+' *************************************************************************************
+' 2015/02/02 SILPSPG,CONMINIPG,JIKENPG　Round( → RoundS( に置換
+' 2015/02/02 マイナスの切捨て
+' 2018/05/28 入替
+' *************************************************************************************
+' *************************************************************************************
+' 2012/04/18    H.SAEKI     新規 指定した文字を除去する
+' *************************************************************************************
+
+Public Function CutAny(vStr As Variant, vAny As String) As String
+
+    Dim w変換 As String
+    Dim w位置 As String
+    Dim ix As Long
+
+    If IsNull(vStr) Then  '---[Null]の場合は空文字を返す
+        CutAny = ""
+        Exit Function
+    End If
+    
+    w変換 = vStr
+    
+    w位置 = InStr(w変換, vAny) '---文字位置を返す
+    
+    Do Until w位置 = 0 '---[vAny]がなくなるまで繰り返す
+        Select Case w位置
+            Case 1
+                w変換 = Mid(w変換, 2)
+            Case Else
+                w変換 = Mid(w変換, 1, w位置 - 1) & Mid(w変換, w位置 + 1)
+        End Select
+        
+        w位置 = InStr(w変換, vAny)
+    Loop
+    
+    CutAny = w変換
+
+End Function
+
+
+Function KANAConv(ByVal vStr As String) As String
+
+    Dim s As String
+    Dim ss As String
+    Dim ix As Long
+    
+    s = ""
+    ss = ""
+    vStr = StrConv(vStr, 8)  '//半角へ変換
+    
+    ' 文字列中の指定文字を除去
+    '
+    For ix = 1 To Len(vStr)
+        s = Mid(vStr, ix, 1)
+        Select Case s
+            Case "ｧ": s = "ｱ"
+            Case "ｨ": s = "ｲ"
+            Case "ｩ": s = "ｳ"
+            Case "ｪ": s = "ｴ"
+            Case "ｫ": s = "ｵ"
+            Case "ｬ": s = "ﾔ"
+            Case "ｭ": s = "ﾕ"
+            Case "ｮ": s = "ﾖ"
+            Case "ｯ": s = "ﾂ"
+''2020/05/08            Case "-": s = "ｰ"
+        End Select
+    
+        ss = ss & s
+    
+    Next ix
+    
+    If Len(ss) > 0 Then
+        KANAConv = ss
+    Else
+        KANAConv = vStr
+    End If
+
+End Function
+
+
+Public Function Get月初(v年月日 As Date, Optional v前後 As Long = 0) As Date
+
+'//----------------------------------------------
+'//
+'//----------------------------------------------
+
+    Dim w年月日 As Date
+    
+    If Format(v年月日, "yyyy") = 9999 Then
+        If v前後 >= 0 Then
+            w年月日 = DateAdd("M", 0, v年月日)
+        Else
+            w年月日 = DateAdd("M", v前後, v年月日)
+        End If
+    Else
+        w年月日 = DateAdd("M", v前後, v年月日)
+    End If
+    
+    w年月日 = Year(w年月日) & "/" & Month(w年月日) & "/" & 1
+    w年月日 = w年月日
+    
+    Get月初 = w年月日
+
+End Function
+
+
+Public Function Get月末(v年月日 As Date, Optional v前後 As Long = 0) As Date
+
+'//----------------------------------------------
+'//
+'//----------------------------------------------
+
+    Dim w年月日 As Date
+    
+    If Format(v年月日, "yyyy") = 9999 Then
+        If Format(v年月日, "mm") = 12 Then
+            w年月日 = DateAdd("M", 0, v年月日)
+            '****2012/10/04S
+''2016/01/08            Get月末 = w年月日
+            Get月末 = #12/31/9999#
+            Exit Function
+        Else
+            w年月日 = DateAdd("M", v前後 + 1, v年月日)
+        End If
+    Else
+        w年月日 = DateAdd("M", v前後 + 1, v年月日)
+    End If
+
+    w年月日 = Year(w年月日) & "/" & Month(w年月日) & "/" & 1
+    w年月日 = w年月日 - 1
+
+    Get月末 = w年月日
+
+End Function
+
+
+Public Function Get締日年月(v日付 As Date, v締日 As Long) As Long
+
+'//----------------------------------------------
+'// 締日処理 [200712]の形式で返す
+'//----------------------------------------------
+
+    Dim w日 As Long
+    
+    w日 = Format(v日付, "d")
+    
+    If w日 > v締日 Then
+        Get締日年月 = CLng(Format(DateAdd("m", 1, v日付), "yyyymm"))
+    Else
+        Get締日年月 = CLng(Format(v日付, "yyyymm"))
+    End If
+
+End Function
+
+
+Public Function GetByte(v As Variant) As Byte
+
+'//----------------------------------------------
+'// 文字列のバイト数を返す
+'//----------------------------------------------
+
+    GetByte = 0
+    
+    If IsNull(v) Then Exit Function
+    If Len(v) <= 0 Then Exit Function
+    
+    GetByte = LenB(StrConv(v, vbFromUnicode))
+    
+End Function
+
+
+'*******************************************************************************************
+'
+'   文字列中の空白を全て除去する
+'
+'*******************************************************************************************
+Function ATrim(ByVal vStr As String) As String
+
+    Dim ss As String
+    Dim ix As Long
+    
+    ' 標準関数で両端の空白を削除
+    '
+    vStr = Trim(vStr)
+
+    ss = ""
+    
+    ' 文字列中の空白を除去
+    '
+    Do While (1)
+        ix = InStr(1, vStr, " ", vbTextCompare)
+        If ix > 0 Then
+            If ix > 1 Then
+                ss = ss & Mid(vStr, 1, ix - 1)      ' 空白までの左側を連結
+            End If
+            vStr = Mid(vStr, ix + 1)            ' 再処理用に空白の右側を代入
+        Else
+            Exit Do
+        End If
+    Loop
+    
+    If Len(ss) > 0 Then
+        ATrim = ss & vStr
+    Else
+        ATrim = vStr
+    End If
+
+End Function
+
+
+Public Sub KRecToRec(rs1, rs2)
+
+'//--------------------------
+'//
+'//--------------------------
+
+    Dim ix As Long
+    Dim fcnt As Long
+    Dim fnm As String
+
+On Error Resume Next
+  
+    fcnt = rs1.Fields.Count
+    For ix = 0 To fcnt - 1
+        fnm = rs1.Fields(ix).Name
+        rs2.Fields(fnm) = rs1.Fields(fnm)
+    Next ix
+
+End Sub
