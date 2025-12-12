@@ -42,7 +42,7 @@ var MasterManager = {
      */
     bindEvents: function() {
         var self = this;
-        
+
         // 保存ボタン
         $('#btn-master-save').off('click').on('click', function() {
             self.save();
@@ -52,13 +52,9 @@ var MasterManager = {
         $('#btn-master-clear').off('click').on('click', function() {
             self.clearForm();
         });
-        
+
         // 閉じるボタン
-        $('#btn-master-close, .master-close-btn').off('click').on('click', function(e) {
-            e.preventDefault();
-            alert('閉じるボタンが押されました');
-            self.close();
-        });
+        this.bindCloseEvent();
         
         // フィルタ変更
         $('#filter-bumon, #filter-use').off('change').on('change', function() {
@@ -97,6 +93,19 @@ var MasterManager = {
             }
         });
     },
+
+    /**
+     * 閉じるボタンのイベントをバインド（委譲で確実に捕捉）
+     */
+    bindCloseEvent: function() {
+        var self = this;
+
+        $(document).off('click.masterClose').on('click.masterClose', '#btn-master-close, .master-close-btn', function(e) {
+            e.preventDefault();
+            alert('閉じるボタンが押されました');
+            self.close();
+        });
+    },
     
     /**
      * 一覧読み込み
@@ -132,7 +141,9 @@ var MasterManager = {
      */
     renderList: function(data) {
         var html = '';
-        var columnCount = $('#master-table-body').closest('table').find('thead th').length || 1;
+        var headerCount = $('.master-table-header thead th').length;
+        var fallbackCount = $('#master-table-body').closest('table').find('thead th').length;
+        var columnCount = headerCount || fallbackCount || 1;
 
         if (!data || data.length === 0) {
             html = '<tr><td colspan="' + columnCount + '" class="no-data">データがありません</td></tr>';
