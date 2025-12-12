@@ -316,9 +316,18 @@ var MasterManager = {
      */
     close: function() {
         // iframe内から親ウィンドウのモーダルを閉じる
-        if (window.parent && window.parent !== window && typeof window.parent.closeMasterModal === 'function') {
-            window.parent.closeMasterModal();
-        } else if (window.opener) {
+        try {
+            if (window.parent && window.parent !== window && typeof window.parent.closeMasterModal === 'function') {
+                window.parent.closeMasterModal();
+                return;
+            }
+        } catch (e) {
+            // クロスドメインやアクセス権の問題で失敗した場合は後続のフォールバックへ
+            console.warn('closeMasterModal call failed in parent context:', e);
+        }
+
+        // 直接ウィンドウを開いている場合
+        if (window.opener && !window.opener.closed) {
             window.close();
         } else {
             // メイン画面に戻る
