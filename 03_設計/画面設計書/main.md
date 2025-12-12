@@ -155,12 +155,12 @@
 
 | No | ボタン名 | ボタンID | 処理内容 | 権限 |
 |----|---------|---------|---------|------|
-| 1 | 新規入力 | btn-new | 入力ダイアログ（新規）を開く | 全員 |
-| 2 | 商品 | btn-master-product | 商品マスタ画面を開く | 管理者 |
-| 3 | 対応区分 | btn-master-category | 対応区分マスタ画面を開く | 管理者 |
-| 4 | 対応内容 | btn-master-content | 対応内容項目マスタ画面を開く | 管理者 |
-| 5 | 定型文 | btn-master-template | 定型文マスタ画面を開く | 管理者 |
-| 6 | EXCEL出力 | btn-excel | 検索結果をExcel出力 | 全員 |
+| 1 | 新規入力 | btn-new | 入力ダイアログ（新規）を開く | ログインユーザー |
+| 2 | 商品 | btn-master-product | 商品マスタ画面（master_shohin.php）をモーダル（iframe）で開く | ログインユーザー |
+| 3 | 対応区分 | btn-master-category | 対応区分マスタ画面をモーダルで開く | ログインユーザー |
+| 4 | 対応内容 | btn-master-content | 対応内容項目マスタ画面をモーダルで開く | ログインユーザー |
+| 5 | 定型文 | btn-master-template | 定型文マスタ画面をモーダルで開く | ログインユーザー |
+| 6 | EXCEL出力 | btn-excel | 検索結果をExcel出力 | ログインユーザー |
 
 ### 3.3 検索エリア
 
@@ -168,14 +168,15 @@
 
 | No | 項目名 | 項目ID | name属性 | 種類 | 説明 |
 |----|-------|--------|---------|------|------|
-| 1 | 作業担当 | search-tantou | search_tantou | セレクトボックス | 担当者で絞り込み |
-| 2 | 顧客名 | search-kokyaku | search_kokyaku | テキスト | 部分一致検索 |
-| 3 | 商品 | search-shohin | search_shohin | セレクトボックス | 商品で絞り込み |
-| 4 | 対応区分 | search-kubun | search_kubun | セレクトボックス | 対応区分で絞り込み |
-| 5 | 対応日（開始） | search-date-from | search_date_from | 日付 | 期間の開始日 |
-| 6 | 対応日（終了） | search-date-to | search_date_to | 日付 | 期間の終了日 |
-| 7 | キーワード | search-keyword | search_keyword | テキスト | 報告内容の部分一致 |
-| 8 | 対応内容 | search-content[] | search_content | チェックボックス | 複数選択可 |
+| 1 | 部門 | search-bumon | search_bumon | セレクトボックス | 部門で絞り込み。選択された部門に応じて作業担当の候補を絞り込み表示。 |
+| 2 | 作業担当 | search-tantou | search_tantou | セレクトボックス | 担当者で絞り込み。部門未選択時は全担当者を表示。 |
+| 3 | 顧客名 | search-kokyaku | search_kokyaku | テキスト | 部分一致検索 |
+| 4 | 商品 | search-shohin | search_shohin | セレクトボックス | 商品で絞り込み（使用区分=1のみ表示） |
+| 5 | 対応区分 | search-kubun | search_kubun | セレクトボックス | 対応区分で絞り込み |
+| 6 | 対応日（開始） | search-date-from | search_date_from | 日付 | 期間の開始日。初期表示時は「1週間前」が自動セットされる。 |
+| 7 | 対応日（終了） | search-date-to | search_date_to | 日付 | 期間の終了日。初期表示時は「本日」が自動セットされる。 |
+| 8 | キーワード | search-keyword | search_keyword | テキスト | 報告内容の部分一致 |
+| 9 | 対応内容 | search-content[] | search_content | チェックボックス | M_対応内容項目を全件表示し複数選択可 |
 
 #### 3.3.2 検索ボタン
 
@@ -190,13 +191,13 @@
 
 | No | カラム名 | データソース | 幅 | ソート | 説明 |
 |----|---------|-------------|-----|------|------|
-| 1 | 担当者 | SQL_作業担当.氏名 | 100px | ○ | 作業担当者名 |
-| 2 | 商品 | M_商品.商品名 | 120px | ○ | 商品名（複数の場合はカンマ区切り） |
-| 3 | 対応日時 | D_作業報告.対応開始日時 | 140px | ○ | YYYY/MM/DD HH:MM形式 |
-| 4 | 対応内容 | D_作業報告.対応内容フラグ | 150px | - | チェック項目をカンマ区切り |
-| 5 | 顧客名 | SQL_顧客.顧客名 | 150px | ○ | 顧客名 |
-| 6 | 報告内容 | D_作業報告.報告内容 | 200px | - | 先頭50文字+... |
-| 7 | 操作 | - | 80px | - | 編集ボタン |
+| 1 | 担当者 | SQL_作業担当.氏名 | 100px | ○ | 作業担当者名（クリックでソート可） |
+| 2 | 商品 | M_商品.商品名1〜3 | 180px | - | 商品コード1～3に紐づく商品名をカンマ区切りで連結して表示 |
+| 3 | 対応日時 | D_作業報告.対応開始日時 | 140px | ○ | YYYY/MM/DD HH:MM形式。初期ソート対象。 |
+| 4 | 対応内容 | D_作業報告.対応内容フラグ | 150px | - | 対応内容フラグONの名称をカンマ区切りで表示 |
+| 5 | 顧客名 | SQL_顧客.顧客名 | 150px | ○ | 顧客名（クリックでソート可） |
+| 6 | 報告内容 | D_作業報告.報告内容 | 200px | - | 50文字でトリムした表示文。セルにマウスオーバーすると全文ツールチップ表示。 |
+| 7 | 操作 | - | 80px | - | 編集ボタン。行クリックでも編集ダイアログを開く。 |
 
 #### 3.4.2 一覧行の操作
 
@@ -213,7 +214,7 @@
 | 3 | ページ情報 | page-info | 現在ページ / 総ページ数 |
 | 4 | 次へ | btn-next | 次のページへ移動 |
 | 5 | 最後 | btn-last | 最終ページへ移動 |
-| 6 | 表示件数 | page-size | 25/50/100件から選択 |
+| 6 | 表示件数 | display-count | 設定ファイルのPAGE_SIZE_OPTIONS（25/50/100件）から選択 |
 
 ---
 
@@ -240,6 +241,7 @@ START
     ↓
 ┌─────────────────────┐
 │初期データ取得        │
+│・部門リスト取得      │
 │・担当者リスト取得    │
 │・商品リスト取得      │
 │・対応区分リスト取得  │
@@ -248,13 +250,16 @@ START
          │
          ↓
 ┌─────────────────────┐
-│一覧データ取得        │
-│(最新50件、日時降順)  │
+│画面描画             │
 └────────┬────────────┘
          │
          ↓
 ┌─────────────────────┐
-│画面描画             │
+│一覧データ取得        │
+│(support_ajax01.php) │
+│・セッション保存済み  │
+│  条件/ソート/件数を  │
+│  反映して取得        │
 └─────────────────────┘
          │
         END
@@ -420,16 +425,19 @@ FETCH NEXT @limit ROWS ONLY
 | パラメータ名 | 型 | 説明 |
 |-------------|-----|------|
 | action | string | 'search' |
-| tantou | int | 担当者コード |
+| bumon | int|null | 部門コード |
+| tantou | int|null | 担当者コード |
 | kokyaku | string | 顧客名 |
-| shohin | int | 商品コード |
-| kubun | int | 対応区分コード |
-| date_from | string | 対応日（開始）YYYY-MM-DD |
-| date_to | string | 対応日（終了）YYYY-MM-DD |
+| shohin | int|null | 商品コード |
+| kubun | int|null | 対応区分コード |
+| date_from | string|null | 対応日（開始）YYYY-MM-DD |
+| date_to | string|null | 対応日（終了）YYYY-MM-DD |
 | keyword | string | キーワード |
 | content[] | array | 対応内容項目コード配列 |
 | page | int | ページ番号（1始まり） |
-| limit | int | 1ページあたり件数 |
+| limit | int | 1ページあたり件数（PAGE_SIZE_OPTIONSより） |
+| sort_column | string | ソート対象（taiou_start/tantou_name/kokyaku_name/seqno） |
+| sort_order | string | ソート順（ASC/DESC） |
 
 **レスポンス**:
 
@@ -439,15 +447,18 @@ FETCH NEXT @limit ROWS ONLY
     "total": 1234,
     "page": 1,
     "limit": 50,
+    "total_pages": 25,
     "data": [
         {
             "seqno": 12345,
             "tantou_name": "山田太郎",
-            "shohin_name": "SILPS",
+            "shohin_name": "SILPS, ちゃんぷる～EJ",
             "taiou_datetime": "2025/11/25 10:30",
             "taiou_content": "操作説明, データ更新",
             "kokyaku_name": "株式会社○○",
-            "houkoku": "xxxxxxxx..."
+            "houkoku": "xxxxxxxx...",
+            "houkoku_short": "xxxxxxxx...",
+            "houkoku_full": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         },
         // ...
     ]
@@ -497,10 +508,10 @@ FETCH NEXT @limit ROWS ONLY
 |-------------|--------|---------|
 | 新規入力ボタン | 入力ダイアログ（新規） | モーダル表示 |
 | 編集ボタン | 入力ダイアログ（編集） | モーダル表示 |
-| 商品ボタン | 商品マスタ画面 | 新規タブ or モーダル |
-| 対応区分ボタン | 対応区分マスタ画面 | 新規タブ or モーダル |
-| 対応内容ボタン | 対応内容項目マスタ画面 | 新規タブ or モーダル |
-| 定型文ボタン | 定型文マスタ画面 | 新規タブ or モーダル |
+| 商品ボタン | 商品マスタ画面（master_shohin.php） | 画面内モーダル（iframe） |
+| 対応区分ボタン | 対応区分マスタ画面 | 画面内モーダル（iframe） |
+| 対応内容ボタン | 対応内容項目マスタ画面 | 画面内モーダル（iframe） |
+| 定型文ボタン | 定型文マスタ画面 | 画面内モーダル（iframe） |
 | ログアウトボタン | ログイン画面 | リダイレクト |
 
 ### 9.2 遷移元
@@ -515,120 +526,25 @@ FETCH NEXT @limit ROWS ONLY
 
 ## 10. JavaScript処理
 
-### 10.1 初期化処理
+### 10.1 初期化
 
-```javascript
-$(function() {
-    // 初期データ取得
-    loadInitialData();
-    
-    // 一覧データ取得
-    loadListData(1);
-    
-    // イベントハンドラ設定
-    initEventHandlers();
-    
-    // アコーディオン初期化
-    initAccordion();
-});
-```
+- DOMロード完了時に以下を実行。
+  - `loadData(currentPage)` で support_ajax01.php から一覧を取得し、セッション保持中の検索条件・ソート・表示件数を反映。
+  - 報告内容セルのホバー表示を行う `initHoukokuTooltip()` を登録。
+  - アコーディオンヘッダークリックで検索フォームの開閉とアイコンの開閉状態を切替。
+  - 検索/クリア/表示件数変更/ページング/ソート/編集/新規入力/Excel出力/マスタ起動の各イベントをバインド。
+  - 部門選択変更時に `filterTantouByBumon()` で担当者候補をフィルタリング。
 
-### 10.2 アコーディオン処理
+### 10.2 主要関数
 
-```javascript
-function initAccordion() {
-    $('.accordion-header').on('click', function() {
-        var $content = $(this).next('.accordion-content');
-        var $icon = $(this).find('.accordion-icon');
-        
-        $content.slideToggle(300);
-        $icon.toggleClass('open');
-    });
-}
-```
-
-### 10.3 検索処理
-
-```javascript
-function doSearch(page) {
-    var params = {
-        action: 'search',
-        tantou: $('#search-tantou').val(),
-        kokyaku: $('#search-kokyaku').val(),
-        shohin: $('#search-shohin').val(),
-        kubun: $('#search-kubun').val(),
-        date_from: $('#search-date-from').val(),
-        date_to: $('#search-date-to').val(),
-        keyword: $('#search-keyword').val(),
-        content: [],
-        page: page || 1,
-        limit: $('#page-size').val()
-    };
-    
-    // 対応内容チェックボックス
-    $('input[name="search_content"]:checked').each(function() {
-        params.content.push($(this).val());
-    });
-    
-    // バリデーション
-    if (!validateSearchParams(params)) {
-        return;
-    }
-    
-    // ローディング表示
-    showLoading();
-    
-    $.ajax({
-        type: 'POST',
-        url: 'support_ajax01.php',
-        data: params,
-        dataType: 'json',
-        success: function(response) {
-            hideLoading();
-            if (response.status === 'success') {
-                renderList(response);
-            } else {
-                showError(response.message);
-            }
-        },
-        error: function() {
-            hideLoading();
-            showError('通信エラーが発生しました。');
-        }
-    });
-}
-```
-
-### 10.4 一覧描画処理
-
-```javascript
-function renderList(response) {
-    var html = '';
-    var data = response.data;
-    
-    if (data.length === 0) {
-        html = '<tr><td colspan="7" class="no-data">データがありません。</td></tr>';
-    } else {
-        for (var i = 0; i < data.length; i++) {
-            var row = data[i];
-            html += '<tr data-seqno="' + row.seqno + '">';
-            html += '<td>' + escapeHtml(row.tantou_name) + '</td>';
-            html += '<td>' + escapeHtml(row.shohin_name) + '</td>';
-            html += '<td>' + escapeHtml(row.taiou_datetime) + '</td>';
-            html += '<td>' + escapeHtml(row.taiou_content) + '</td>';
-            html += '<td>' + escapeHtml(row.kokyaku_name) + '</td>';
-            html += '<td>' + escapeHtml(row.houkoku) + '</td>';
-            html += '<td><button class="btn-edit" data-seqno="' + row.seqno + '">編集</button></td>';
-            html += '</tr>';
-        }
-    }
-    
-    $('#list-body').html(html);
-    $('#total-count').text(response.total + '件');
-    
-    renderPaging(response);
-}
-```
+- `loadData(page)`: 検索条件・ソート・表示件数を収集し、`AppAjax.post` で support_ajax01.php を呼び出して一覧を再描画。
+- `renderTable(responseData)`: 取得データから行HTMLを生成し、商品名結合・対応内容表示・報告内容の短縮/全文データ属性をセットし総件数を更新。
+- `updatePaging()`: 現在ページと総ページ数に応じてページングボタンの活性/非活性とページ情報を更新。
+- `updateSortIcons()`: ソート対象ヘッダに `sorted` を付与し、昇順/降順アイコンを切替。
+- `exportExcel()`: 現在の検索条件をクエリストリング化し、`export_excel.php` へのダウンロード遷移を実行。
+- `filterTantouByBumon(bumonCode)`: 部門コードに一致しない担当者オプションを一時的に非表示にし、選択値が除外された場合はクリア。
+- `initHoukokuTooltip()`: 報告内容セルのマウスオーバーで全文ツールチップを表示し、離脱で非表示化。
+- `openMasterModal(url, title)` / `closeMasterModal()`: 画面内モーダルとして各マスタ画面をiframeで開閉する。
 
 ---
 
@@ -732,28 +648,8 @@ function renderList(response) {
 
 ### 12.1 画面要素の権限制御
 
-| 要素 | 一般ユーザー | 管理者 |
-|------|------------|--------|
-| 新規入力ボタン | ○ | ○ |
-| 編集ボタン | ○（自分のデータのみ） | ○（全データ） |
-| 商品ボタン | × | ○ |
-| 対応区分ボタン | × | ○ |
-| 対応内容ボタン | × | ○ |
-| 定型文ボタン | × | ○ |
-| EXCEL出力ボタン | ○ | ○ |
-
-### 12.2 権限チェック実装
-
-```php
-// マスタ設定ボタンの表示制御
-if ($_SESSION['AUTH_LEVEL'] >= 2) {
-    // 管理者のみ表示
-    echo '<button id="btn-master-product">商品</button>';
-    echo '<button id="btn-master-category">対応区分</button>';
-    echo '<button id="btn-master-content">対応内容</button>';
-    echo '<button id="btn-master-template">定型文</button>';
-}
-```
+- `requireLogin()` によりログイン済みであることのみをチェックし、メニュー/検索/編集/マスタ起動/Excel出力は全ユーザーが利用できる。
+- 行クリック・編集ボタンから入力ダイアログへ遷移する権限制御は実装していない（サーバー側の保存処理で制御する想定）。
 
 ---
 
