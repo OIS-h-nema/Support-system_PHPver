@@ -54,7 +54,8 @@ var MasterManager = {
         });
         
         // 閉じるボタン
-        $('#btn-master-close, .master-close-btn').off('click').on('click', function() {
+        $('#btn-master-close, .master-close-btn').off('click').on('click', function(e) {
+            e.preventDefault();
             self.close();
         });
         
@@ -130,16 +131,17 @@ var MasterManager = {
      */
     renderList: function(data) {
         var html = '';
-        
+        var columnCount = $('#master-table-body').closest('table').find('thead th').length || 1;
+
         if (!data || data.length === 0) {
-            html = '<tr><td colspan="10" class="no-data">データがありません</td></tr>';
+            html = '<tr><td colspan="' + columnCount + '" class="no-data">データがありません</td></tr>';
         } else {
             for (var i = 0; i < data.length; i++) {
                 var row = data[i];
                 html += this.renderRow(row);
             }
         }
-        
+
         $('#master-table-body').html(html);
     },
     
