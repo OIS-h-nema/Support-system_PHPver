@@ -40,8 +40,8 @@
 .master-close-btn {
     padding: 6px 15px;
     font-size: 14px;
-    color: #666;
-    background: #f3f4f6;
+    color: #374151;
+    background: #fff;
     border: 1px solid #d1d5db;
     border-radius: 4px;
     cursor: pointer;
@@ -49,8 +49,7 @@
 }
 
 .master-close-btn:hover {
-    background: #e5e7eb;
-    color: #333;
+    background: #f3f4f6;
 }
 
 /* メッセージエリア */
@@ -190,13 +189,51 @@
     margin-bottom: 20px;
 }
 
+.master-list-area .data-table-container {
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.master-list-area .data-table-header {
+    background: #f9fafb;
+    border-bottom: 2px solid #d1d5db;
+}
+
+.master-list-area .data-table-header table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.master-list-area .data-table-header th {
+    padding: 10px 12px;
+    text-align: left;
+    background: #f9fafb;
+    font-weight: 600;
+    font-size: 13px;
+    color: #374151;
+    white-space: nowrap;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.master-list-area .data-table-body-wrapper {
+    max-height: 360px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.master-list-area .data-table-body-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
 .master-table {
     width: 100%;
     border-collapse: collapse;
     background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    overflow: hidden;
 }
 
 .master-table th,
@@ -215,7 +252,7 @@
 }
 
 .master-table tbody tr:hover {
-    background: #f9fafb;
+    background: #f0f7ff;
 }
 
 .master-table tbody tr:last-child td {
@@ -224,7 +261,7 @@
 
 .master-table .no-data {
     text-align: center;
-    padding: 30px;
+    padding: 24px;
     color: #6b7280;
 }
 
@@ -243,14 +280,6 @@
     white-space: nowrap;
     text-align: center;
     width: 150px;
-}
-
-/* フッターエリア */
-.master-footer-area {
-    display: flex;
-    justify-content: flex-end;
-    padding-top: 15px;
-    border-top: 1px solid #e5e7eb;
 }
 
 /* 注意書き */

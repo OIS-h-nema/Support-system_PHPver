@@ -48,7 +48,7 @@ try {
     <!-- ヘッダー -->
     <div class="master-header">
         <h1>マスタ設定 - 商品</h1>
-        <button type="button" class="master-close-btn">× 閉じる</button>
+        <button type="button" class="master-close-btn">閉じる</button>
     </div>
     
     <!-- メッセージエリア -->
@@ -123,26 +123,29 @@ try {
     
     <!-- 一覧エリア -->
     <div class="master-list-area">
-        <table class="master-table">
-            <thead>
-                <tr>
-                    <th class="col-bumon">部門</th>
-                    <th class="col-code">コード</th>
-                    <th class="col-name">商品名</th>
-                    <th class="col-use">使用区分</th>
-                    <th class="col-date">更新日時</th>
-                    <th class="col-action">操作</th>
-                </tr>
-            </thead>
-            <tbody id="master-table-body">
-                <tr><td colspan="6" class="no-data">読み込み中...</td></tr>
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- フッターエリア -->
-    <div class="master-footer-area">
-        <button type="button" id="btn-master-close" class="btn btn-outline">閉じる</button>
+        <div class="data-table-container">
+            <div class="data-table-header">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="col-bumon">部門</th>
+                            <th class="col-code">コード</th>
+                            <th class="col-name">商品名</th>
+                            <th class="col-use">使用区分</th>
+                            <th class="col-date">更新日時</th>
+                            <th class="col-action">操作</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <div class="data-table-body-wrapper">
+                <table class="master-table">
+                    <tbody id="master-table-body">
+                        <tr><td colspan="6" class="no-data">読み込み中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
