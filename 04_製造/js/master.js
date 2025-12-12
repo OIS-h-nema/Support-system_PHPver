@@ -54,7 +54,9 @@ var MasterManager = {
         });
         
         // 閉じるボタン
-        $('#btn-master-close, .master-close-btn').off('click').on('click', function() {
+        MasterManager.bindCloseButtons(function(e) {
+            e.preventDefault();
+            alert('閉じるボタンが押されました');
             self.close();
         });
         
@@ -130,16 +132,17 @@ var MasterManager = {
      */
     renderList: function(data) {
         var html = '';
-        
+        var columnCount = $('#master-table-body').closest('table').find('thead th').length || 1;
+
         if (!data || data.length === 0) {
-            html = '<tr><td colspan="10" class="no-data">データがありません</td></tr>';
+            html = '<tr><td colspan="' + columnCount + '" class="no-data">データがありません</td></tr>';
         } else {
             for (var i = 0; i < data.length; i++) {
                 var row = data[i];
                 html += this.renderRow(row);
             }
         }
-        
+
         $('#master-table-body').html(html);
     },
     
@@ -314,9 +317,18 @@ var MasterManager = {
      */
     close: function() {
         // iframe内から親ウィンドウのモーダルを閉じる
-        if (window.parent && window.parent !== window && typeof window.parent.closeMasterModal === 'function') {
-            window.parent.closeMasterModal();
-        } else if (window.opener) {
+        try {
+            if (window.parent && window.parent !== window && typeof window.parent.closeMasterModal === 'function') {
+                window.parent.closeMasterModal();
+                return;
+            }
+        } catch (e) {
+            // クロスドメインやアクセス権の問題で失敗した場合は後続のフォールバックへ
+            console.warn('closeMasterModal call failed in parent context:', e);
+        }
+
+        // 直接ウィンドウを開いている場合
+        if (window.opener && !window.opener.closed) {
             window.close();
         } else {
             // メイン画面に戻る
@@ -355,6 +367,22 @@ var MasterManager = {
      */
     clearMessages: function() {
         $('.master-message-area').empty();
+    },
+
+    /**
+     * 閉じるボタンのバインド（安全側の一括管理）
+     * @param {function} handler クリック時の処理
+     */
+    bindCloseButtons: function(handler) {
+        var clickHandler = handler || function(e) {
+            e.preventDefault();
+            alert('閉じるボタンが押されました');
+            MasterManager.close();
+        };
+
+        $(document)
+            .off('click.masterClose', '#btn-master-close, .master-close-btn')
+            .on('click.masterClose', '#btn-master-close, .master-close-btn', clickHandler);
     }
 };
 
@@ -491,4 +519,9 @@ var ContentMaster = $.extend({}, MasterManager, {
             $('#master-code').prop('readonly', false).removeClass('readonly');
         }
     }
+});
+
+// 予期しない初期化失敗時でも閉じるボタンが効くように、共通バインドを初期ロードで実行
+$(function() {
+    MasterManager.bindCloseButtons();
 });
