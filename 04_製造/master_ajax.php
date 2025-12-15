@@ -158,16 +158,17 @@ function getMasterList($master_type) {
                 
             case 'category':
                 // 対応区分マスタ
-                $sql = "SELECT 
+                $sql = "SELECT
                             対応区分コード AS kubun_code,
                             対応区分名 AS kubun_name,
                             更新日時 AS update_datetime
                         FROM M_対応区分
                         WHERE 削除日時 IS NULL
                         ORDER BY 対応区分コード";
-                
-                $stmt = $pdo_conn->query($sql);
-                
+
+                $stmt = $pdo_conn->prepare($sql);
+                $stmt->execute();
+
                 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     $data[] = array(
                         'code' => $row['kubun_code'],
@@ -176,19 +177,20 @@ function getMasterList($master_type) {
                     );
                 }
                 break;
-                
+
             case 'content':
                 // 対応内容項目マスタ
-                $sql = "SELECT 
+                $sql = "SELECT
                             項目コード AS koumoku_code,
                             項目名 AS koumoku_name,
                             更新日時 AS update_datetime
                         FROM M_対応内容項目
                         WHERE 削除日時 IS NULL
                         ORDER BY 項目コード";
-                
-                $stmt = $pdo_conn->query($sql);
-                
+
+                $stmt = $pdo_conn->prepare($sql);
+                $stmt->execute();
+
                 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     $data[] = array(
                         'code' => $row['koumoku_code'],
