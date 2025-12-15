@@ -115,8 +115,8 @@ function getMasterList($master_type) {
             case 'template':
                 // 定型文マスタ
                 $filter_bumon = isset($_POST['filter_bumon']) ? (int)$_POST['filter_bumon'] : 0;
-                
-                $sql = "SELECT 
+
+                $sql = "SELECT
                             t.部門コード AS bumon_code,
                             b.部門名 AS bumon_name,
                             t.定型文コード AS teikei_code,
@@ -124,16 +124,16 @@ function getMasterList($master_type) {
                             t.更新日時 AS update_datetime
                         FROM M_定型文 t
                         LEFT JOIN SQL_部門 b ON t.部門コード = b.部門コード
-                        WHERE t.削除日時 IS NULL";
+                        WHERE 1 = 1";
                 $params = array();
-                
+
                 if ($filter_bumon > 0) {
                     $sql .= " AND t.部門コード = ?";
                     $params[] = $filter_bumon;
                 }
-                
+
                 $sql .= " ORDER BY t.部門コード, t.定型文コード";
-                
+
                 $stmt = $pdo_conn->prepare($sql);
                 $stmt->execute($params);
                 
@@ -163,7 +163,6 @@ function getMasterList($master_type) {
                             対応区分名 AS kubun_name,
                             更新日時 AS update_datetime
                         FROM M_対応区分
-                        WHERE 削除日時 IS NULL
                         ORDER BY 対応区分コード";
 
                 $stmt = $pdo_conn->prepare($sql);
@@ -185,7 +184,6 @@ function getMasterList($master_type) {
                             項目名 AS koumoku_name,
                             更新日時 AS update_datetime
                         FROM M_対応内容項目
-                        WHERE 削除日時 IS NULL
                         ORDER BY 項目コード";
 
                 $stmt = $pdo_conn->prepare($sql);
@@ -249,12 +247,12 @@ function getMasterData($master_type) {
                 
             case 'template':
                 $stmt = $pdo_conn->prepare("
-                    SELECT 
-                        部門コード AS bumon_code, 
-                        定型文コード AS teikei_code, 
+                    SELECT
+                        部門コード AS bumon_code,
+                        定型文コード AS teikei_code,
                         定型文 AS teikei_text
                     FROM M_定型文
-                    WHERE 部門コード = ? AND 定型文コード = ? AND 削除日時 IS NULL
+                    WHERE 部門コード = ? AND 定型文コード = ?
                 ");
                 $stmt->execute(array($bumon_code, $code));
                 $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -270,11 +268,11 @@ function getMasterData($master_type) {
                 
             case 'category':
                 $stmt = $pdo_conn->prepare("
-                    SELECT 
-                        対応区分コード AS kubun_code, 
+                    SELECT
+                        対応区分コード AS kubun_code,
                         対応区分名 AS kubun_name
                     FROM M_対応区分
-                    WHERE 対応区分コード = ? AND 削除日時 IS NULL
+                    WHERE 対応区分コード = ?
                 ");
                 $stmt->execute(array($code));
                 $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -289,11 +287,11 @@ function getMasterData($master_type) {
                 
             case 'content':
                 $stmt = $pdo_conn->prepare("
-                    SELECT 
-                        項目コード AS koumoku_code, 
+                    SELECT
+                        項目コード AS koumoku_code,
                         項目名 AS koumoku_name
                     FROM M_対応内容項目
-                    WHERE 項目コード = ? AND 削除日時 IS NULL
+                    WHERE 項目コード = ?
                 ");
                 $stmt->execute(array($code));
                 $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -409,10 +407,11 @@ function saveProduct($mode) {
  */
 function saveTemplate($mode) {
     global $pdo_conn;
-    
+
     $bumon_code = (int)$_POST['bumon_code'];
     $text = trim($_POST['text']);
-    
+    $user_code = isset($_SESSION['USER_ID']) ? (int)$_SESSION['USER_ID'] : null;
+
     if ($mode === 'new') {
         // 新規登録 - コード採番（エイリアス使用）
         $stmt = $pdo_conn->prepare("
@@ -423,12 +422,12 @@ function saveTemplate($mode) {
         $stmt->execute(array($bumon_code));
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $code = $result['new_code'];
-        
+
         $stmt = $pdo_conn->prepare("
-            INSERT INTO M_定型文 (部門コード, 定型文コード, 定型文, 入力日時, 更新日時)
-            VALUES (?, ?, ?, GETDATE(), GETDATE())
+            INSERT INTO M_定型文 (部門コード, 定型文コード, 定型文, 作成日時, 作成者コード, 更新日時, 更新者コード)
+            VALUES (?, ?, ?, GETDATE(), ?, GETDATE(), ?)
         ");
-        $stmt->execute(array($bumon_code, $code, $text));
+        $stmt->execute(array($bumon_code, $code, $text, $user_code, $user_code));
         
         jsonSuccess(array('bumon_code' => $bumon_code, 'code' => $code), '登録しました。');
         
@@ -437,10 +436,10 @@ function saveTemplate($mode) {
         $code = (int)$_POST['code'];
         
         $stmt = $pdo_conn->prepare("
-            UPDATE M_定型文 SET 定型文 = ?, 更新日時 = GETDATE()
-            WHERE 部門コード = ? AND 定型文コード = ? AND 削除日時 IS NULL
+            UPDATE M_定型文 SET 定型文 = ?, 更新日時 = GETDATE(), 更新者コード = ?
+            WHERE 部門コード = ? AND 定型文コード = ?
         ");
-        $stmt->execute(array($text, $bumon_code, $code));
+        $stmt->execute(array($text, $user_code, $bumon_code, $code));
         
         jsonSuccess(array('bumon_code' => $bumon_code, 'code' => $code), '更新しました。');
     }
@@ -451,9 +450,10 @@ function saveTemplate($mode) {
  */
 function saveCategory($mode) {
     global $pdo_conn;
-    
+
     $name = trim($_POST['name']);
-    
+    $input_machine = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+
     if ($mode === 'new') {
         // 新規登録 - コード採番（エイリアス使用）
         $stmt = $pdo_conn->query("
@@ -462,12 +462,12 @@ function saveCategory($mode) {
         ");
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $code = $result['new_code'];
-        
+
         $stmt = $pdo_conn->prepare("
-            INSERT INTO M_対応区分 (対応区分コード, 対応区分名, 入力日時, 更新日時)
-            VALUES (?, ?, GETDATE(), GETDATE())
+            INSERT INTO M_対応区分 (対応区分コード, 対応区分名, 更新日時, 入力マシン)
+            VALUES (?, ?, GETDATE(), ?)
         ");
-        $stmt->execute(array($code, $name));
+        $stmt->execute(array($code, $name, $input_machine));
         
         jsonSuccess(array('code' => $code), '登録しました。');
         
@@ -476,10 +476,10 @@ function saveCategory($mode) {
         $code = (int)$_POST['code'];
         
         $stmt = $pdo_conn->prepare("
-            UPDATE M_対応区分 SET 対応区分名 = ?, 更新日時 = GETDATE()
-            WHERE 対応区分コード = ? AND 削除日時 IS NULL
+            UPDATE M_対応区分 SET 対応区分名 = ?, 更新日時 = GETDATE(), 入力マシン = ?
+            WHERE 対応区分コード = ?
         ");
-        $stmt->execute(array($name, $code));
+        $stmt->execute(array($name, $input_machine, $code));
         
         jsonSuccess(array('code' => $code), '更新しました。');
     }
@@ -490,38 +490,39 @@ function saveCategory($mode) {
  */
 function saveContent($mode) {
     global $pdo_conn;
-    
+
     $code = (int)$_POST['code'];
     $name = trim($_POST['name']);
-    
+    $input_machine = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+
     if ($mode === 'new') {
         // 重複チェック（エイリアス使用）
         $stmt = $pdo_conn->prepare("
             SELECT 項目コード AS koumoku_code FROM M_対応内容項目
-            WHERE 項目コード = ? AND 削除日時 IS NULL
+            WHERE 項目コード = ?
         ");
         $stmt->execute(array($code));
         if ($stmt->fetch()) {
-            jsonError('この項目コードは既に使用されています。', 'VALID_001', 
+            jsonError('この項目コードは既に使用されています。', 'VALID_001',
                       array('この項目コードは既に使用されています。'));
             return;
         }
-        
+
         $stmt = $pdo_conn->prepare("
-            INSERT INTO M_対応内容項目 (項目コード, 項目名, 入力日時, 更新日時)
-            VALUES (?, ?, GETDATE(), GETDATE())
+            INSERT INTO M_対応内容項目 (項目コード, 項目名, 更新日時, 入力マシン)
+            VALUES (?, ?, GETDATE(), ?)
         ");
-        $stmt->execute(array($code, $name));
+        $stmt->execute(array($code, $name, $input_machine));
         
         jsonSuccess(array('code' => $code), '登録しました。');
         
     } else {
         // 更新
         $stmt = $pdo_conn->prepare("
-            UPDATE M_対応内容項目 SET 項目名 = ?, 更新日時 = GETDATE()
-            WHERE 項目コード = ? AND 削除日時 IS NULL
+            UPDATE M_対応内容項目 SET 項目名 = ?, 更新日時 = GETDATE(), 入力マシン = ?
+            WHERE 項目コード = ?
         ");
-        $stmt->execute(array($name, $code));
+        $stmt->execute(array($name, $input_machine, $code));
         
         jsonSuccess(array('code' => $code), '更新しました。');
     }
@@ -586,27 +587,93 @@ function deleteMaster($master_type) {
                 break;
                 
             case 'template':
-                $stmt = $pdo_conn->prepare("
-                    UPDATE M_定型文 SET 削除日時 = GETDATE()
-                    WHERE 部門コード = ? AND 定型文コード = ? AND 削除日時 IS NULL
-                ");
-                $stmt->execute(array($bumon_code, $code));
+                $pdo_conn->beginTransaction();
+                try {
+                    $stmt = $pdo_conn->prepare("SELECT 部門コード, 定型文コード, 定型文, 作成日時, 作成者コード, 更新日時, 更新者コード FROM M_定型文 WHERE 部門コード = ? AND 定型文コード = ?");
+                    $stmt->execute(array($bumon_code, $code));
+                    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$row) {
+                        throw new Exception('対象データが見つかりません。');
+                    }
+
+                    $insert = $pdo_conn->prepare("INSERT INTO DELDATA_定型文 (部門コード, 定型文コード, 定型文, 作成日時, 作成者コード, 更新日時, 更新者コード, 削除日時) VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())");
+                    $insert->execute(array(
+                        $row['部門コード'],
+                        $row['定型文コード'],
+                        $row['定型文'],
+                        $row['作成日時'],
+                        $row['作成者コード'],
+                        $row['更新日時'],
+                        $row['更新者コード']
+                    ));
+
+                    $delete = $pdo_conn->prepare("DELETE FROM M_定型文 WHERE 部門コード = ? AND 定型文コード = ?");
+                    $delete->execute(array($bumon_code, $code));
+
+                    $pdo_conn->commit();
+                } catch (Exception $e) {
+                    $pdo_conn->rollBack();
+                    throw $e;
+                }
                 break;
-                
+
             case 'category':
-                $stmt = $pdo_conn->prepare("
-                    UPDATE M_対応区分 SET 削除日時 = GETDATE()
-                    WHERE 対応区分コード = ? AND 削除日時 IS NULL
-                ");
-                $stmt->execute(array($code));
+                $pdo_conn->beginTransaction();
+                try {
+                    $stmt = $pdo_conn->prepare("SELECT 対応区分コード, 対応区分名, 更新日時, 入力マシン FROM M_対応区分 WHERE 対応区分コード = ?");
+                    $stmt->execute(array($code));
+                    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$row) {
+                        throw new Exception('対象データが見つかりません。');
+                    }
+
+                    $insert = $pdo_conn->prepare("INSERT INTO DELDATA_対応区分 (対応区分コード, 対応区分名, 更新日時, 入力マシン, 削除日時) VALUES (?, ?, ?, ?, GETDATE())");
+                    $insert->execute(array(
+                        $row['対応区分コード'],
+                        $row['対応区分名'],
+                        $row['更新日時'],
+                        $row['入力マシン']
+                    ));
+
+                    $delete = $pdo_conn->prepare("DELETE FROM M_対応区分 WHERE 対応区分コード = ?");
+                    $delete->execute(array($code));
+
+                    $pdo_conn->commit();
+                } catch (Exception $e) {
+                    $pdo_conn->rollBack();
+                    throw $e;
+                }
                 break;
-                
+
             case 'content':
-                $stmt = $pdo_conn->prepare("
-                    UPDATE M_対応内容項目 SET 削除日時 = GETDATE()
-                    WHERE 項目コード = ? AND 削除日時 IS NULL
-                ");
-                $stmt->execute(array($code));
+                $pdo_conn->beginTransaction();
+                try {
+                    $stmt = $pdo_conn->prepare("SELECT 項目コード, 項目名, 更新日時, 入力マシン FROM M_対応内容項目 WHERE 項目コード = ?");
+                    $stmt->execute(array($code));
+                    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$row) {
+                        throw new Exception('対象データが見つかりません。');
+                    }
+
+                    $insert = $pdo_conn->prepare("INSERT INTO DELDATA_対応内容項目 (項目コード, 項目名, 更新日時, 入力マシン, 削除日時) VALUES (?, ?, ?, ?, GETDATE())");
+                    $insert->execute(array(
+                        $row['項目コード'],
+                        $row['項目名'],
+                        $row['更新日時'],
+                        $row['入力マシン']
+                    ));
+
+                    $delete = $pdo_conn->prepare("DELETE FROM M_対応内容項目 WHERE 項目コード = ?");
+                    $delete->execute(array($code));
+
+                    $pdo_conn->commit();
+                } catch (Exception $e) {
+                    $pdo_conn->rollBack();
+                    throw $e;
+                }
                 break;
         }
         
