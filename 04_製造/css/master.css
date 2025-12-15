@@ -195,23 +195,13 @@
     background: #fff;
 }
 
-.embedded-table {
-    display: flex;
-    flex-direction: column;
-}
-
-.embedded-table .master-table-header {
-    overflow: hidden;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.embedded-table .master-table-body {
+.master-list-area .data-table-wrapper {
     max-height: 360px;
     overflow-y: auto;
     overflow-x: hidden;
 }
 
-.embedded-table table {
+.master-list-area .data-table-container table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;

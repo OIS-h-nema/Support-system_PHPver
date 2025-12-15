@@ -54,7 +54,11 @@ var MasterManager = {
         });
 
         // 閉じるボタン
-        this.bindCloseEvent();
+        MasterManager.bindCloseButtons(function(e) {
+            e.preventDefault();
+            alert('閉じるボタンが押されました');
+            self.close();
+        });
         
         // フィルタ変更
         $('#filter-bumon, #filter-use').off('change').on('change', function() {
@@ -141,9 +145,7 @@ var MasterManager = {
      */
     renderList: function(data) {
         var html = '';
-        var headerCount = $('.master-table-header thead th').length;
-        var fallbackCount = $('#master-table-body').closest('table').find('thead th').length;
-        var columnCount = headerCount || fallbackCount || 1;
+        var columnCount = $('#master-table-body').closest('table').find('thead th').length || 1;
 
         if (!data || data.length === 0) {
             html = '<tr><td colspan="' + columnCount + '" class="no-data">データがありません</td></tr>';
@@ -378,6 +380,22 @@ var MasterManager = {
      */
     clearMessages: function() {
         $('.master-message-area').empty();
+    },
+
+    /**
+     * 閉じるボタンのバインド（安全側の一括管理）
+     * @param {function} handler クリック時の処理
+     */
+    bindCloseButtons: function(handler) {
+        var clickHandler = handler || function(e) {
+            e.preventDefault();
+            alert('閉じるボタンが押されました');
+            MasterManager.close();
+        };
+
+        $(document)
+            .off('click.masterClose', '#btn-master-close, .master-close-btn')
+            .on('click.masterClose', '#btn-master-close, .master-close-btn', clickHandler);
     }
 };
 
@@ -514,4 +532,9 @@ var ContentMaster = $.extend({}, MasterManager, {
             $('#master-code').prop('readonly', false).removeClass('readonly');
         }
     }
+});
+
+// 予期しない初期化失敗時でも閉じるボタンが効くように、共通バインドを初期ロードで実行
+$(function() {
+    MasterManager.bindCloseButtons();
 });

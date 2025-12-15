@@ -68,15 +68,9 @@ requireLogin();
     
     <!-- 一覧エリア -->
     <div class="master-list-area">
-        <div class="data-table-container embedded-table">
-            <div class="master-table-header">
+        <div class="data-table-container">
+            <div class="data-table-wrapper">
                 <table class="master-table">
-                    <colgroup>
-                        <col style="width: 80px;" />
-                        <col />
-                        <col style="width: 130px;" />
-                        <col style="width: 150px;" />
-                    </colgroup>
                     <thead>
                         <tr>
                             <th class="col-code">対応区分コード</th>
@@ -85,16 +79,6 @@ requireLogin();
                             <th class="col-action">操作</th>
                         </tr>
                     </thead>
-                </table>
-            </div>
-            <div class="master-table-body">
-                <table class="master-table">
-                    <colgroup>
-                        <col style="width: 80px;" />
-                        <col />
-                        <col style="width: 130px;" />
-                        <col style="width: 150px;" />
-                    </colgroup>
                     <tbody id="master-table-body">
                         <tr><td colspan="4" class="no-data">読み込み中...</td></tr>
                     </tbody>
