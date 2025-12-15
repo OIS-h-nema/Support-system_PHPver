@@ -197,7 +197,7 @@ $pdo_conn = new PDO($dsn, $username, $password, $options);
 |----|---------|---------|-------|------|-----|-----------|------|
 | 1 | 対応区分コード | bigint | 8 | NOT NULL | ○ | - | 区分一意コード |
 | 2 | 対応区分名 | nvarchar | 255 | NULL | - | NULL | 区分名称 |
-| 3 | 更新日時 | datetime | 8 | NULL | - | GETDATE() | 最終更新日時 |
+| 3 | 更新日時 | datetime | 8 | NULL | - | NULL | 最終更新日時 |
 | 4 | 入力マシン | nvarchar | 255 | NULL | - | NULL | 入力元識別子 |
 
 #### 3.3.3 インデックス定義
@@ -205,6 +205,7 @@ $pdo_conn = new PDO($dsn, $username, $password, $options);
 | インデックス名 | カラム | 種別 | 説明 |
 |--------------|--------|------|------|
 | PK_M_対応区分 | 対応区分コード | CLUSTERED | 主キー |
+| IX_対応区分コード | 対応区分コード | NON-CLUSTERED | 検索用 |
 
 ---
 
@@ -225,7 +226,7 @@ $pdo_conn = new PDO($dsn, $username, $password, $options);
 |----|---------|---------|-------|------|-----|-----------|------|
 | 1 | 項目コード | bigint | 8 | NOT NULL | ○ | - | 項目一意コード（1〜20） |
 | 2 | 項目名 | nvarchar | 255 | NULL | - | NULL | 項目名称 |
-| 3 | 更新日時 | datetime | 8 | NULL | - | GETDATE() | 最終更新日時 |
+| 3 | 更新日時 | datetime | 8 | NULL | - | NULL | 最終更新日時 |
 | 4 | 入力マシン | nvarchar | 255 | NULL | - | NULL | 入力元識別子 |
 
 #### 3.4.3 制約事項
@@ -238,6 +239,7 @@ $pdo_conn = new PDO($dsn, $username, $password, $options);
 | インデックス名 | カラム | 種別 | 説明 |
 |--------------|--------|------|------|
 | PK_M_対応内容項目 | 項目コード | CLUSTERED | 主キー |
+| IX_項目コード | 項目コード | NON-CLUSTERED | 検索用 |
 
 ---
 
@@ -259,7 +261,7 @@ $pdo_conn = new PDO($dsn, $username, $password, $options);
 | 1 | 部門コード | bigint | 8 | NOT NULL | ○ | - | 部門コード |
 | 2 | 定型文コード | bigint | 8 | NOT NULL | ○ | - | 定型文連番 |
 | 3 | 定型文 | nvarchar | MAX | NULL | - | NULL | 定型文内容 |
-| 4 | 作成日時 | datetime | 8 | NULL | - | GETDATE() | 作成日時 |
+| 4 | 作成日時 | datetime | 8 | NULL | - | NULL | 作成日時 |
 | 5 | 作成者コード | bigint | 8 | NULL | - | NULL | 作成者担当者コード |
 | 6 | 更新日時 | datetime | 8 | NULL | - | NULL | 最終更新日時 |
 | 7 | 更新者コード | bigint | 8 | NULL | - | NULL | 更新者担当者コード |
@@ -269,6 +271,7 @@ $pdo_conn = new PDO($dsn, $username, $password, $options);
 | インデックス名 | カラム | 種別 | 説明 |
 |--------------|--------|------|------|
 | PK_M_定型文 | 部門コード, 定型文コード | CLUSTERED | 主キー |
+| IX_部門コード_定型文コード | 部門コード, 定型文コード | NON-CLUSTERED | 部門ごとの検索用 |
 
 ---
 
