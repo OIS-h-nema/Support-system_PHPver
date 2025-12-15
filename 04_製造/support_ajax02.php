@@ -71,7 +71,7 @@ function doInsert() {
     
     try {
         $pdo_conn->beginTransaction();
-        
+
         // SEQNO採番
         $stmt = $pdo_conn->query("EXEC COUNTUP_SYS_SEQNO");
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -98,6 +98,11 @@ function doInsert() {
         
         // 対応内容フラグを展開
         $flags = prepareFlags($_POST);
+
+        // 部門コードとマシン情報（WEB固定）
+        $bumon_code = getCurrentBumonCode();
+        $machine_name = 'WEB';
+        $network_flag = 1;  // WEB版は常にオンライン
         
         // INSERT文
         $sql = "INSERT INTO D_作業報告 (
@@ -106,6 +111,7 @@ function doInsert() {
                     対応終了日時,
                     顧客コード,
                     顧客担当者名,
+                    部門コード,
                     商品コード1,
                     商品コード2,
                     商品コード3,
@@ -135,20 +141,23 @@ function doInsert() {
                     対応内容フラグ20,
                     作成日時,
                     更新日時,
-                    入力マシン
+                    更新マシン,
+                    入力マシン,
+                    ネットワークFLG
                 ) VALUES (
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                    ?, ?, GETDATE(), GETDATE(), ?
+                    ?, ?, ?, GETDATE(), GETDATE(), ?, ?, ?
                 )";
-        
+
         $params = array(
             $seqno,
             $taiou_start,
             $taiou_end,
             (int)$_POST['kokyaku_code'],
             trim($_POST['kokyaku_tanto']),
+            $bumon_code,
             Ez($_POST['shohin_code1']),
             Ez($_POST['shohin_code2']),
             Ez($_POST['shohin_code3']),
@@ -162,9 +171,11 @@ function doInsert() {
         foreach ($flags as $flag) {
             $params[] = $flag;
         }
-        
-        // 入力マシン
-        $params[] = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+
+        // 更新マシン/入力マシン/ネットワークFLG
+        $params[] = $machine_name;
+        $params[] = $machine_name;
+        $params[] = $network_flag;
         
         $stmt = $pdo_conn->prepare($sql);
         $stmt->execute($params);
@@ -237,13 +248,19 @@ function doUpdate() {
         
         // 対応内容フラグを展開
         $flags = prepareFlags($_POST);
-        
+
+        // 部門コードとマシン情報（WEB固定）
+        $bumon_code = getCurrentBumonCode();
+        $machine_name = 'WEB';
+        $network_flag = 1;
+
         // UPDATE文
         $sql = "UPDATE D_作業報告 SET
                     対応開始日時 = ?,
                     対応終了日時 = ?,
                     顧客コード = ?,
                     顧客担当者名 = ?,
+                    部門コード = ?,
                     商品コード1 = ?,
                     商品コード2 = ?,
                     商品コード3 = ?,
@@ -272,14 +289,17 @@ function doUpdate() {
                     対応内容フラグ19 = ?,
                     対応内容フラグ20 = ?,
                     更新日時 = GETDATE(),
-                    入力マシン = ?
+                    更新マシン = ?,
+                    入力マシン = ?,
+                    ネットワークFLG = ?
                 WHERE SEQNO = ? AND 削除日時 IS NULL";
-        
+
         $params = array(
             $taiou_start,
             $taiou_end,
             (int)$_POST['kokyaku_code'],
             trim($_POST['kokyaku_tanto']),
+            $bumon_code,
             Ez($_POST['shohin_code1']),
             Ez($_POST['shohin_code2']),
             Ez($_POST['shohin_code3']),
@@ -293,9 +313,11 @@ function doUpdate() {
         foreach ($flags as $flag) {
             $params[] = $flag;
         }
-        
-        // 入力マシンとSEQNO
-        $params[] = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+
+        // マシン情報とSEQNO
+        $params[] = $machine_name;
+        $params[] = $machine_name;
+        $params[] = $network_flag;
         $params[] = $seqno;
         
         $stmt = $pdo_conn->prepare($sql);
