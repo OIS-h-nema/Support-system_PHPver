@@ -42,7 +42,7 @@ var MasterManager = {
      */
     bindEvents: function() {
         var self = this;
-        
+
         // 保存ボタン
         $('#btn-master-save').off('click').on('click', function() {
             self.save();
@@ -52,7 +52,7 @@ var MasterManager = {
         $('#btn-master-clear').off('click').on('click', function() {
             self.clearForm();
         });
-        
+
         // 閉じるボタン
         MasterManager.bindCloseButtons(function(e) {
             e.preventDefault();
@@ -95,6 +95,19 @@ var MasterManager = {
             if (e.keyCode === 27) {
                 self.close();
             }
+        });
+    },
+
+    /**
+     * 閉じるボタンのイベントをバインド（委譲で確実に捕捉）
+     */
+    bindCloseEvent: function() {
+        var self = this;
+
+        $(document).off('click.masterClose').on('click.masterClose', '#btn-master-close, .master-close-btn', function(e) {
+            e.preventDefault();
+            alert('閉じるボタンが押されました');
+            self.close();
         });
     },
     
