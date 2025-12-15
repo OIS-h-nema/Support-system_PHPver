@@ -253,7 +253,7 @@
 | 1 | 検索 | btn-kokyaku-search | 常時 | 顧客検索ダイアログを開く |
 | 2 | 定型文 | btn-teikei | 常時 | 定型文選択ダイアログを開く |
 | 3 | キャンセル | btn-cancel | 常時 | ダイアログを閉じる |
-| 4 | 保存 | btn-save | 常時 | データを保存 |
+| 4 | 保存 | btn-save | 常時 | バリデーション後に保存し一覧を更新、ダイアログを開いたまま新規入力状態へ戻す |
 | 5 | 削除 | btn-delete | 編集モードのみ | データを削除 |
 | 6 | × | btn-close | 常時 | ダイアログを閉じる |
 
@@ -400,10 +400,16 @@ SEQNO採番  SEQNO指定
 成功JSON返却 エラーJSON返却
     │         │
     ↓         ↓
-ダイアログ閉じ エラー表示
-一覧再読込    │
+メッセージ表示 エラー表示
     │         │
-   END       END
+    ↓         │
+一覧再読込     │
+    │         │
+    ↓         │
+入力内容リセット│
+（現在日時+フラグ初期化）
+    │
+   END
 ```
 
 ### 4.4 削除処理
@@ -666,7 +672,7 @@ EXEC UPD_D_作業報告
 | キャンセルボタン | 変更確認後、閉じる |
 | オーバーレイクリック | 変更確認後、閉じる |
 | Escキー | 変更確認後、閉じる |
-| 保存成功 | 即座に閉じる、一覧更新 |
+| 保存成功 | ダイアログを閉じずに一覧更新し、入力値を初期化 |
 | 削除成功 | 即座に閉じる、一覧更新 |
 
 ### 9.3 変更確認
@@ -760,8 +766,8 @@ $('#btn-save').on('click', function() {
             hideLoading();
             if (response.status === 'success') {
                 showMessage(response.message);
-                closeInputDialog();
                 refreshList();
+                resetFormForNewEntry();
             } else {
                 showErrors(response.errors);
             }
@@ -772,6 +778,37 @@ $('#btn-save').on('click', function() {
         }
     });
 });
+
+function resetFormForNewEntry() {
+    // 保存完了後、ダイアログを閉じずに新規入力モードへ戻す
+    clearValidationStates();
+    $('#input-form')[0].reset();
+    $('#taiou-date').val(getToday());
+    $('#taiou-time-start').val(getNowRounded());
+    $('#taiou-time-end').val(getNowRounded());
+    $('input[name="taiou_flag[]"]').prop('checked', false);
+    $('#houkoku-naiyo').val('');
+    setNewSeqNoPlaceholder();
+    $('#kokyaku-code').focus();
+}
+
+function clearValidationStates() {
+    $('.error-text').remove();
+    $('.input-error').removeClass('input-error');
+}
+
+function getToday() {
+    return dayjs().format('YYYY-MM-DD');
+}
+
+function getNowRounded() {
+    return dayjs().startOf('minute').minute(Math.floor(dayjs().minute() / 5) * 5).format('HH:mm');
+}
+
+function setNewSeqNoPlaceholder() {
+    $('#seqno-display').text('新規');
+    $('#hidden-seqno').val('');
+}
 ```
 
 ---

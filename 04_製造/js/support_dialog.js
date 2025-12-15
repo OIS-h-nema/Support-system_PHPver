@@ -389,12 +389,10 @@ var InputDialog = {
             if (response.status === 'success') {
                 // 成功メッセージ
                 AppMessage.showSuccess(response.message || '保存しました。');
-                
-                // ダイアログを閉じる
-                self.formChanged = false;
-                $('#input-dialog-overlay').removeClass('active');
-                $('body').css('overflow', '');
-                
+
+                // 保存後もダイアログを開いたまま、新規入力状態に戻す
+                self.resetForNewEntry();
+
                 // 一覧を更新
                 if (typeof loadData === 'function') {
                     loadData(currentPage || 1);
@@ -407,6 +405,34 @@ var InputDialog = {
             AppLoading.hide();
             self.showErrors([message]);
         });
+    },
+
+    /**
+     * 保存完了後の再初期化処理（新規入力モードに戻す）
+     */
+    resetForNewEntry: function() {
+        // モードとSEQNOを新規状態に
+        this.mode = 'new';
+        this.currentSeqno = null;
+        $('#edit-mode').val('new');
+        $('#edit-seqno').val('');
+
+        // ボタンやタイトルを新規モード表示に戻す
+        $('#dialog-title').text('サポート報告書 新規登録');
+        $('#btn-delete').hide();
+        $('#btn-save').text('登録');
+        $('#update-info').text('');
+
+        // 入力内容とエラー状態をリセットし、初期値を再設定
+        this.resetForm();
+        this.setDefaultValues();
+
+        // 新規状態を元データとして保持し、変更フラグを下げる
+        this.formChanged = false;
+        this.originalData = this.collectFormData();
+
+        // フォーカスを先頭項目へ
+        $('#kokyaku-code').focus();
     },
     
     /**
