@@ -56,7 +56,6 @@ var MasterManager = {
         // 閉じるボタン
         MasterManager.bindCloseButtons(function(e) {
             e.preventDefault();
-            alert('閉じるボタンが押されました');
             self.close();
         });
         
@@ -106,7 +105,6 @@ var MasterManager = {
 
         $(document).off('click.masterClose').on('click.masterClose', '#btn-master-close, .master-close-btn', function(e) {
             e.preventDefault();
-            alert('閉じるボタンが押されました');
             self.close();
         });
     },
@@ -389,7 +387,6 @@ var MasterManager = {
     bindCloseButtons: function(handler) {
         var clickHandler = handler || function(e) {
             e.preventDefault();
-            alert('閉じるボタンが押されました');
             MasterManager.close();
         };
 
