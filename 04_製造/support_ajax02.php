@@ -8,6 +8,7 @@
  * 修正履歴:
  * 2025-11-25 新規作成（Phase 07）
  * 2025-12-08 顧客検索でSEQNOを返すように修正（D_作業報告.顧客コードとの結合用）
+ * 2025-12-16 INSERT時のSET NOCOUNT ON追加、closeCursor()追加（PDOエラー対策）
  */
 
 // 設定ファイル読み込み
@@ -72,17 +73,24 @@ function doInsert() {
     try {
         $pdo_conn->beginTransaction();
 
-        // SEQNO採番
-        $stmt = $pdo_conn->query("EXEC COUNTUP_SYS_SEQNO");
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $seqno = isset($result['SEQNO']) ? $result['SEQNO'] : null;
-        $stmt->closeCursor();
-        
+        // SEQNO採番（SET NOCOUNT ONで余分な結果セットを抑制）
+        $seqno = null;
+        try {
+            $stmt = $pdo_conn->query("SET NOCOUNT ON; EXEC COUNTUP_SYS_SEQNO");
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $seqno = isset($result['SEQNO']) ? $result['SEQNO'] : null;
+            $stmt->closeCursor();
+        } catch (PDOException $e) {
+            // ストアドプロシージャが失敗した場合はログ記録
+            error_log('COUNTUP_SYS_SEQNO error: ' . $e->getMessage());
+        }
+
         if (!$seqno) {
             // SEQNOが取得できない場合はMAX+1で対応
             $stmt = $pdo_conn->query("SELECT ISNULL(MAX(SEQNO), 0) + 1 AS SEQNO FROM D_作業報告");
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             $seqno = $result['SEQNO'];
+            $stmt->closeCursor();
         }
         
         // 対応日時を結合
@@ -104,8 +112,8 @@ function doInsert() {
         $machine_name = 'WEB';
         $network_flag = 1;  // WEB版は常にオンライン
         
-        // INSERT文
-        $sql = "INSERT INTO D_作業報告 (
+        // INSERT文（SET NOCOUNT ONで余分な結果セットを抑制）
+        $sql = "SET NOCOUNT ON; INSERT INTO D_作業報告 (
                     SEQNO,
                     対応開始日時,
                     対応終了日時,
@@ -179,14 +187,19 @@ function doInsert() {
         
         $stmt = $pdo_conn->prepare($sql);
         $stmt->execute($params);
-        
+        $stmt->closeCursor();  // 未処理の結果セットをクリア
+
         $pdo_conn->commit();
         
         jsonSuccess(array('seqno' => $seqno), '登録しました。');
         
     } catch (PDOException $e) {
-        $pdo_conn->rollBack();
+        if ($pdo_conn->inTransaction()) {
+            $pdo_conn->rollBack();
+        }
         error_log('Insert error: ' . $e->getMessage());
+        error_log('Insert SQLSTATE: ' . $e->getCode());
+        error_log('Insert params: ' . json_encode($params, JSON_UNESCAPED_UNICODE));
         jsonError('登録中にエラーが発生しました。', ERR_DB_INSERT);
     }
 }
@@ -254,8 +267,8 @@ function doUpdate() {
         $machine_name = 'WEB';
         $network_flag = 1;
 
-        // UPDATE文
-        $sql = "UPDATE D_作業報告 SET
+        // UPDATE文（SET NOCOUNT ONで余分な結果セットを抑制）
+        $sql = "SET NOCOUNT ON; UPDATE D_作業報告 SET
                     対応開始日時 = ?,
                     対応終了日時 = ?,
                     顧客コード = ?,
@@ -322,6 +335,7 @@ function doUpdate() {
         
         $stmt = $pdo_conn->prepare($sql);
         $stmt->execute($params);
+        $stmt->closeCursor();  // 未処理の結果セットをクリア
         
         jsonSuccess(array('seqno' => $seqno), '更新しました。');
         
@@ -354,16 +368,20 @@ function doDelete() {
         // 存在チェック
         $stmt = $pdo_conn->prepare("SELECT SEQNO FROM D_作業報告 WHERE SEQNO = ? AND 削除日時 IS NULL");
         $stmt->execute(array($seqno));
-        
+
         if (!$stmt->fetch()) {
+            $stmt->closeCursor();
             jsonError('データが見つかりません。', ERR_DB_NOT_FOUND);
             return;
         }
-        
+
+        $stmt->closeCursor();
+
         // 論理削除（削除日時をセット）
-        $sql = "UPDATE D_作業報告 SET 削除日時 = GETDATE() WHERE SEQNO = ?";
+        $sql = "SET NOCOUNT ON; UPDATE D_作業報告 SET 削除日時 = GETDATE() WHERE SEQNO = ?";
         $stmt = $pdo_conn->prepare($sql);
         $stmt->execute(array($seqno));
+        $stmt->closeCursor();
         
         jsonSuccess(null, '削除しました。');
         

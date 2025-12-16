@@ -794,6 +794,37 @@ $flash_errors = getFlashErrors();
                 openEditDialog(seqno);
             });
 
+            // 削除ボタン（動的要素：管理者のみ表示）
+            $(document).on('click', '.btn-delete', function(e) {
+                e.stopPropagation();
+                var seqno = $(this).data('seqno');
+                if (!seqno) {
+                    return;
+                }
+
+                if (!confirm('このサポート報告書を削除してもよろしいですか？\nこの操作は取り消せません。')) {
+                    return;
+                }
+
+                AppLoading.show();
+                AppAjax.post('support_ajax02.php', {
+                    action: 'delete',
+                    seqno: seqno
+                }, function(response) {
+                    AppLoading.hide();
+
+                    if (response.status === 'success') {
+                        AppMessage.showSuccess(response.message || '削除しました。');
+                        loadData(currentPage);
+                    } else {
+                        AppMessage.showError(response.message || '削除に失敗しました。');
+                    }
+                }, function(message) {
+                    AppLoading.hide();
+                    AppMessage.showError(message);
+                });
+            });
+
             // テーブル行クリックで編集（Phase 07追加）
             $(document).on('click', '#data-table-body tr[data-seqno]', function() {
                 var seqno = $(this).data('seqno');
@@ -907,7 +938,12 @@ $flash_errors = getFlashErrors();
                     html += '<td class="col-houkoku houkoku-cell" data-houkoku="' + AppUtil.escapeHtml(houkokuFull).replace(/"/g, '&quot;') + '">';
                     html += '<span class="houkoku-text">' + AppUtil.escapeHtml(row.houkoku_short || row.houkoku) + '</span>';
                     html += '</td>';
-                    html += '<td class="col-action"><button class="btn btn-sm btn-outline btn-edit" data-seqno="' + row.seqno + '">編集</button></td>';
+                    html += '<td class="col-action">';
+                    html += '<button class="btn btn-sm btn-outline btn-edit" data-seqno="' + row.seqno + '">編集</button>';
+                    if (typeof isAdminUser !== 'undefined' && isAdminUser) {
+                        html += ' <button class="btn btn-sm btn-danger btn-delete" data-seqno="' + row.seqno + '">削除</button>';
+                    }
+                    html += '</td>';
                     html += '</tr>';
                 }
             }
