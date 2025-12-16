@@ -228,11 +228,11 @@ function doUpdate() {
             return;
         }
         
-        // 編集権限チェック
-        if (!canEdit($existing['作業担当コード'])) {
-            jsonError('このデータを編集する権限がありません。', ERR_AUTH_PERMISSION);
-            return;
-        }
+        // 編集権限チェックは無効化（全ユーザーが編集可能）
+        // if (!canEdit($existing['作業担当コード'])) {
+        //     jsonError('このデータを編集する権限がありません。', ERR_AUTH_PERMISSION);
+        //     return;
+        // }
         
     } catch (PDOException $e) {
         error_log('Check existence error: ' . $e->getMessage());
@@ -351,11 +351,11 @@ function doUpdate() {
 function doDelete() {
     global $pdo_conn;
     
-    // 管理者権限チェック
-    if (!canDelete()) {
-        jsonError('削除する権限がありません。', ERR_AUTH_PERMISSION);
-        return;
-    }
+    // 管理者権限チェックは無効化（全ユーザーが削除可能）
+    // if (!canDelete()) {
+    //     jsonError('削除する権限がありません。', ERR_AUTH_PERMISSION);
+    //     return;
+    // }
     
     // SEQNO必須チェック
     $seqno = isset($_POST['seqno']) ? (int)$_POST['seqno'] : 0;

@@ -69,14 +69,18 @@ var InputDialog = {
             }
         });
         
-        // 保存ボタン
-        $('#btn-save').on('click', function() {
-            self.save();
+        // 保存ボタン（デリゲートを使用）
+        $(document).off('click', '#btn-save').on('click', '#btn-save', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            InputDialog.save();
         });
 
-        // 削除ボタン
-        $('#btn-delete').on('click', function() {
-            self.confirmDelete();
+        // 削除ボタン（デリゲートを使用）
+        $(document).off('click', '#btn-delete').on('click', '#btn-delete', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            InputDialog.confirmDelete();
         });
         
         // 顧客コードフォーカスアウト時
@@ -173,8 +177,8 @@ var InputDialog = {
                 // タイトル設定
                 $('#dialog-title').text('サポート報告書 編集');
 
-                // ボタン表示制御（管理者のみ削除可能）
-                self.setDeleteButtonVisibility(typeof isAdminUser !== 'undefined' && isAdminUser);
+                // ボタン表示制御（編集モードでは削除ボタンを表示）
+                self.setDeleteButtonVisibility(true);
                 $('#btn-save').text('更新');
                 
                 // ダイアログ表示
@@ -244,11 +248,13 @@ var InputDialog = {
      * @param {boolean} shouldShow 表示する場合はtrue
      */
     setDeleteButtonVisibility: function(shouldShow) {
+        var $btn = $('#btn-delete');
         if (shouldShow) {
             // inlineスタイルのdisplay: none;を上書きし確実に表示
-            $('#btn-delete').css('display', 'inline-flex');
+            $btn.removeAttr('style');
+            $btn.css('display', 'inline-block');
         } else {
-            $('#btn-delete').css('display', 'none');
+            $btn.css('display', 'none');
         }
     },
     
@@ -388,7 +394,8 @@ var InputDialog = {
         }
         
         var formData = this.collectFormData();
-        formData.action = (this.mode === 'new') ? 'insert' : 'update';
+        var isUpdate = (this.mode === 'edit');
+        formData.action = isUpdate ? 'update' : 'insert';
         
         AppLoading.show();
         
@@ -399,8 +406,17 @@ var InputDialog = {
                 // 成功メッセージ
                 AppMessage.showSuccess(response.message || '保存しました。');
 
-                // 保存後もダイアログを開いたまま、新規入力状態に戻す
-                self.resetForNewEntry();
+                // 更新時はダイアログを閉じる、新規登録時は新規入力状態に戻す
+                if (isUpdate) {
+                    // 更新後はダイアログを閉じる
+                    self.formChanged = false;
+                    $('#input-dialog-overlay').removeClass('active');
+                    $('body').css('overflow', '');
+                    self.clearErrors();
+                } else {
+                    // 新規登録後はダイアログを開いたまま、新規入力状態に戻す
+                    self.resetForNewEntry();
+                }
 
                 // 一覧を更新
                 if (typeof loadData === 'function') {
