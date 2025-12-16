@@ -73,7 +73,7 @@ var InputDialog = {
         $('#btn-save').on('click', function() {
             self.save();
         });
-        
+
         // 削除ボタン
         $('#btn-delete').on('click', function() {
             self.confirmDelete();
@@ -123,15 +123,15 @@ var InputDialog = {
         this.mode = 'new';
         this.currentSeqno = null;
         this.formChanged = false;
-        
+
         // フォームリセット
         this.resetForm();
-        
+
         // タイトル設定
         $('#dialog-title').text('サポート報告書 新規登録');
-        
+
         // ボタン表示制御
-        $('#btn-delete').hide();
+        this.setDeleteButtonVisibility(false);
         $('#btn-save').text('登録');
         
         // 更新日時非表示
@@ -160,7 +160,7 @@ var InputDialog = {
         
         // データ取得
         AppLoading.show();
-        
+
         AppAjax.post('support_ajax01.php', {
             action: 'get',
             seqno: seqno
@@ -169,16 +169,12 @@ var InputDialog = {
             
             if (response.status === 'success' && response.data) {
                 self.setFormData(response.data);
-                
+
                 // タイトル設定
                 $('#dialog-title').text('サポート報告書 編集');
-                
+
                 // ボタン表示制御（管理者のみ削除可能）
-                if (typeof isAdminUser !== 'undefined' && isAdminUser) {
-                    $('#btn-delete').show();
-                } else {
-                    $('#btn-delete').hide();
-                }
+                self.setDeleteButtonVisibility(typeof isAdminUser !== 'undefined' && isAdminUser);
                 $('#btn-save').text('更新');
                 
                 // ダイアログ表示
@@ -241,6 +237,19 @@ var InputDialog = {
         $('#kokyaku-name').val('');
         this.clearErrors();
         this.selectedKokyaku = null;
+    },
+
+    /**
+     * 削除ボタンの表示制御
+     * @param {boolean} shouldShow 表示する場合はtrue
+     */
+    setDeleteButtonVisibility: function(shouldShow) {
+        if (shouldShow) {
+            // inlineスタイルのdisplay: none;を上書きし確実に表示
+            $('#btn-delete').css('display', 'inline-flex');
+        } else {
+            $('#btn-delete').css('display', 'none');
+        }
     },
     
     /**
@@ -419,7 +428,7 @@ var InputDialog = {
 
         // ボタンやタイトルを新規モード表示に戻す
         $('#dialog-title').text('サポート報告書 新規登録');
-        $('#btn-delete').hide();
+        this.setDeleteButtonVisibility(false);
         $('#btn-save').text('登録');
         $('#update-info').text('');
 
