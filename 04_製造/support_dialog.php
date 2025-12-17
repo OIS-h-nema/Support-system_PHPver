@@ -200,7 +200,6 @@
             </div>
             <div class="modal-footer-right">
                 <button type="button" id="btn-delete" class="btn btn-danger" style="display: none;">削除</button>
-                <button type="button" id="btn-cancel" class="btn btn-outline">キャンセル</button>
                 <button type="button" id="btn-save" class="btn btn-primary">保存</button>
             </div>
         </div>
@@ -227,7 +226,6 @@
         </div>
         <div class="modal-footer">
             <div class="modal-footer-right">
-                <button type="button" id="btn-kokyaku-search-cancel" class="btn btn-outline">キャンセル</button>
                 <button type="button" id="btn-kokyaku-search-select" class="btn btn-primary" disabled>選択</button>
             </div>
         </div>
@@ -246,11 +244,6 @@
         <div class="modal-body">
             <div class="template-list" id="template-list">
                 <!-- 定型文リストは動的に生成 -->
-            </div>
-        </div>
-        <div class="modal-footer">
-            <div class="modal-footer-right">
-                <button type="button" id="btn-template-cancel" class="btn btn-outline">キャンセル</button>
             </div>
         </div>
     </div>

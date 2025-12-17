@@ -49,12 +49,6 @@ try {
 </head>
 <body>
 <div class="master-container">
-    <!-- ヘッダー（固定表示） -->
-    <div class="master-header">
-        <h1>マスタ設定 - 商品</h1>
-        <button type="button" id="btn-master-close" class="master-close-btn">閉じる</button>
-    </div>
-    
     <!-- メインコンテンツ -->
     <div class="master-content">
         <!-- メッセージエリア -->

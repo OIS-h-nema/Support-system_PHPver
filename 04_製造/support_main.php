@@ -1105,6 +1105,7 @@ $flash_errors = getFlashErrors();
         <div class="master-modal-container">
             <div class="master-modal-header">
                 <span class="master-modal-title"></span>
+                <button type="button" class="master-modal-close" id="master-modal-close-btn">&times;</button>
             </div>
             <div class="master-modal-body">
                 <iframe id="master-modal-iframe" src="" frameborder="0"></iframe>
@@ -1141,18 +1142,34 @@ $flash_errors = getFlashErrors();
     }
     
     .master-modal-header {
-        background: #1e3a5f;
+        background: #2563eb;
         color: #fff;
-        padding: 12px 20px;
+        padding: 15px 20px;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: space-between;
         flex-shrink: 0;
     }
-    
+
     .master-modal-title {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 500;
+    }
+
+    .master-modal-close {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        opacity: 0.85;
+        transition: opacity 0.2s;
+    }
+
+    .master-modal-close:hover {
+        opacity: 1;
     }
     
     .master-modal-body {
@@ -1197,6 +1214,11 @@ $flash_errors = getFlashErrors();
         $('#master-modal-iframe').attr('src', '');
         $('body').css('overflow', '');
     }
+
+    // 閉じるボタン
+    $(document).on('click', '#master-modal-close-btn', function() {
+        closeMasterModal();
+    });
     
     // オーバーレイクリックで閉じる
     $(document).on('click', '.master-modal-overlay', function(e) {
