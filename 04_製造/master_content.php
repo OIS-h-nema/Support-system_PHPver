@@ -7,6 +7,7 @@
  * 
  * 修正履歴:
  * 2025-11-25 新規作成（Phase 08）
+ * 2025-12-17 ヘッダー固定対応
  */
 
 // 設定ファイル読み込み
@@ -34,63 +35,66 @@ requireLogin();
 </head>
 <body>
 <div class="master-container">
-    <!-- ヘッダー -->
+    <!-- ヘッダー（固定表示） -->
     <div class="master-header">
         <h1>マスタ設定 - 対応内容項目</h1>
         <button type="button" id="btn-master-close" class="master-close-btn">閉じる</button>
     </div>
     
-    <!-- メッセージエリア -->
-    <div class="master-message-area"></div>
-    
-    <!-- 入力エリア -->
-    <div class="master-input-area">
-        <div class="master-input-row">
-            <label for="master-code" class="required">項目コード</label>
-            <div class="input-field">
-                <input type="number" id="master-code" name="code" min="1" max="20" style="width: 100px;" />
-                <span class="input-hint code-range-note">1〜20の範囲で指定してください</span>
+    <!-- メインコンテンツ -->
+    <div class="master-content">
+        <!-- メッセージエリア -->
+        <div class="master-message-area"></div>
+        
+        <!-- 入力エリア -->
+        <div class="master-input-area">
+            <div class="master-input-row">
+                <label for="master-code" class="required">項目コード</label>
+                <div class="input-field">
+                    <input type="number" id="master-code" name="code" min="1" max="20" style="width: 100px;" />
+                    <span class="input-hint code-range-note">1〜20の範囲で指定してください</span>
+                </div>
+            </div>
+            
+            <div class="master-input-row">
+                <label for="master-name" class="required">項目名</label>
+                <div class="input-field">
+                    <input type="text" id="master-name" name="name" maxlength="255" />
+                </div>
+            </div>
+            
+            <div class="master-input-actions">
+                <button type="button" id="btn-master-clear" class="btn btn-outline">クリア</button>
+                <button type="button" id="btn-master-save" class="btn btn-primary">保存</button>
             </div>
         </div>
         
-        <div class="master-input-row">
-            <label for="master-name" class="required">項目名</label>
-            <div class="input-field">
-                <input type="text" id="master-name" name="name" maxlength="255" />
-            </div>
+        <!-- 注意書き -->
+        <div class="master-note">
+            <strong>※ 注意事項</strong><br />
+            ・項目コードは1〜20の範囲で指定してください。<br />
+            ・入力ダイアログのチェックボックスの並び順はコード順になります。<br />
+            ・削除すると入力ダイアログのチェックボックスから消えます。
         </div>
         
-        <div class="master-input-actions">
-            <button type="button" id="btn-master-clear" class="btn btn-outline">クリア</button>
-            <button type="button" id="btn-master-save" class="btn btn-primary">保存</button>
-        </div>
-    </div>
-    
-    <!-- 注意書き -->
-    <div class="master-note">
-        <strong>※ 注意事項</strong><br />
-        ・項目コードは1〜20の範囲で指定してください。<br />
-        ・入力ダイアログのチェックボックスの並び順はコード順になります。<br />
-        ・削除すると入力ダイアログのチェックボックスから消えます。
-    </div>
-    
-    <!-- 一覧エリア -->
-    <div class="master-list-area">
-        <div class="data-table-container">
-            <div class="data-table-wrapper">
-                <table class="master-table">
-                    <thead>
-                        <tr>
-                            <th class="col-code">項目コード</th>
-                            <th class="col-name">項目名</th>
-                            <th class="col-date">更新日時</th>
-                            <th class="col-action">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="master-table-body">
-                        <tr><td colspan="4" class="no-data">読み込み中...</td></tr>
-                    </tbody>
-                </table>
+        <!-- 一覧エリア -->
+        <div class="master-list-area">
+            <div class="data-table-container">
+                <div class="data-table-wrapper">
+                    <table class="master-table">
+                        <thead>
+                            <tr>
+                                <th class="col-code">項目コード</th>
+                                <th class="col-name">項目名</th>
+                                <th class="col-date">更新日時</th>
+                                <th class="col-action">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="master-table-body">
+                            <tr><td colspan="4" class="no-data">読み込み中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

@@ -6,6 +6,7 @@
  * 
  * 修正履歴:
  * 2025-11-25 新規作成（Phase 08）
+ * 2025-12-17 保存処理のバグ修正、フィルタ既定値対応
  */
 
 /**
@@ -246,7 +247,11 @@ var MasterManager = {
             }
         }
         
+        // デバッグログ
+        console.log('Save params:', params);
+        
         AppAjax.post('master_ajax.php', params, function(response) {
+            console.log('Save response:', response);
             if (response.status === 'success') {
                 self.showMessage(response.message);
                 self.clearForm();

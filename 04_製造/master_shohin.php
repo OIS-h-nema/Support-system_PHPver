@@ -8,6 +8,7 @@
  * 修正履歴:
  * 2025-11-25 新規作成（Phase 08）
  * 2025-12-11 権限チェック撤廃（設計変更）
+ * 2025-12-17 ヘッダー固定・フィルタ既定値修正
  */
 
 // 設定ファイル読み込み
@@ -18,6 +19,9 @@ require_once("includes/error.php");
 
 // ログインチェック
 requireLogin();
+
+// ログインユーザーの部門コード取得
+$user_bumon_code = getCurrentBumonCode();
 
 // 部門リスト取得（エイリアス使用で文字化け対策）
 $bumon_list = array();
@@ -45,101 +49,104 @@ try {
 </head>
 <body>
 <div class="master-container">
-    <!-- ヘッダー -->
+    <!-- ヘッダー（固定表示） -->
     <div class="master-header">
         <h1>マスタ設定 - 商品</h1>
         <button type="button" id="btn-master-close" class="master-close-btn">閉じる</button>
     </div>
     
-    <!-- メッセージエリア -->
-    <div class="master-message-area"></div>
-    
-    <!-- 入力エリア -->
-    <div class="master-input-area">
-        <div class="master-input-row">
-            <label for="master-bumon" class="required">部門</label>
-            <div class="input-field">
-                <select id="master-bumon" name="bumon_code">
-                    <option value="">選択してください</option>
-                    <?php foreach ($bumon_list as $b): ?>
-                    <option value="<?php echo h($b['code']); ?>">
-                        <?php echo h($b['name']); ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
+    <!-- メインコンテンツ -->
+    <div class="master-content">
+        <!-- メッセージエリア -->
+        <div class="master-message-area"></div>
+        
+        <!-- 入力エリア -->
+        <div class="master-input-area">
+            <div class="master-input-row">
+                <label for="master-bumon" class="required">部門</label>
+                <div class="input-field">
+                    <select id="master-bumon" name="bumon_code">
+                        <option value="">選択してください</option>
+                        <?php foreach ($bumon_list as $b): ?>
+                        <option value="<?php echo h($b['code']); ?>">
+                            <?php echo h($b['name']); ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="master-input-row">
+                <label for="master-code">商品コード</label>
+                <div class="input-field">
+                    <input type="text" id="master-code" name="code" readonly class="readonly" style="width: 100px;" />
+                    <span class="input-hint">新規登録時は自動採番されます</span>
+                </div>
+            </div>
+            
+            <div class="master-input-row">
+                <label for="master-name" class="required">商品名</label>
+                <div class="input-field">
+                    <input type="text" id="master-name" name="name" maxlength="255" />
+                </div>
+            </div>
+            
+            <div class="master-input-row">
+                <label for="master-use" class="required">使用区分</label>
+                <div class="input-field">
+                    <select id="master-use" name="use_flag">
+                        <option value="1">使用する</option>
+                        <option value="0">使用しない</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="master-input-actions">
+                <button type="button" id="btn-master-clear" class="btn btn-outline">クリア</button>
+                <button type="button" id="btn-master-save" class="btn btn-primary">保存</button>
             </div>
         </div>
         
-        <div class="master-input-row">
-            <label for="master-code">商品コード</label>
-            <div class="input-field">
-                <input type="text" id="master-code" name="code" readonly class="readonly" style="width: 100px;" />
-                <span class="input-hint">新規登録時は自動採番されます</span>
-            </div>
+        <!-- フィルタエリア -->
+        <div class="master-filter-area">
+            <label for="filter-bumon">部門:</label>
+            <select id="filter-bumon">
+                <option value="">すべて</option>
+                <?php foreach ($bumon_list as $b): ?>
+                <option value="<?php echo h($b['code']); ?>"<?php echo ($b['code'] == $user_bumon_code) ? ' selected' : ''; ?>>
+                    <?php echo h($b['name']); ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
+            
+            <label for="filter-use">使用区分:</label>
+            <select id="filter-use">
+                <option value="">すべて</option>
+                <option value="1" selected>使用する</option>
+                <option value="0">使用しない</option>
+            </select>
         </div>
         
-        <div class="master-input-row">
-            <label for="master-name" class="required">商品名</label>
-            <div class="input-field">
-                <input type="text" id="master-name" name="name" maxlength="255" />
-            </div>
-        </div>
-        
-        <div class="master-input-row">
-            <label for="master-use" class="required">使用区分</label>
-            <div class="input-field">
-                <select id="master-use" name="use_flag">
-                    <option value="1">使用する</option>
-                    <option value="0">使用しない</option>
-                </select>
-            </div>
-        </div>
-        
-        <div class="master-input-actions">
-            <button type="button" id="btn-master-clear" class="btn btn-outline">クリア</button>
-            <button type="button" id="btn-master-save" class="btn btn-primary">保存</button>
-        </div>
-    </div>
-    
-    <!-- フィルタエリア -->
-    <div class="master-filter-area">
-        <label for="filter-bumon">部門:</label>
-        <select id="filter-bumon">
-            <option value="">すべて</option>
-            <?php foreach ($bumon_list as $b): ?>
-            <option value="<?php echo h($b['code']); ?>">
-                <?php echo h($b['name']); ?>
-            </option>
-            <?php endforeach; ?>
-        </select>
-        
-        <label for="filter-use">使用区分:</label>
-        <select id="filter-use">
-            <option value="">すべて</option>
-            <option value="1">使用する</option>
-            <option value="0">使用しない</option>
-        </select>
-    </div>
-    
-    <!-- 一覧エリア -->
-    <div class="master-list-area">
-        <div class="data-table-container">
-            <div class="data-table-wrapper">
-                <table class="master-table">
-                    <thead>
-                        <tr>
-                            <th class="col-bumon">部門</th>
-                            <th class="col-code">コード</th>
-                            <th class="col-name">商品名</th>
-                            <th class="col-use">使用区分</th>
-                            <th class="col-date">更新日時</th>
-                            <th class="col-action">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="master-table-body">
-                        <tr><td colspan="6" class="no-data">読み込み中...</td></tr>
-                    </tbody>
-                </table>
+        <!-- 一覧エリア -->
+        <div class="master-list-area">
+            <div class="data-table-container">
+                <div class="data-table-wrapper">
+                    <table class="master-table">
+                        <thead>
+                            <tr>
+                                <th class="col-bumon">部門</th>
+                                <th class="col-code">コード</th>
+                                <th class="col-name">商品名</th>
+                                <th class="col-use">使用区分</th>
+                                <th class="col-date">更新日時</th>
+                                <th class="col-action">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="master-table-body">
+                            <tr><td colspan="6" class="no-data">読み込み中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

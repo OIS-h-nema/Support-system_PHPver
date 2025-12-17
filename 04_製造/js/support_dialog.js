@@ -69,18 +69,22 @@ var InputDialog = {
             }
         });
         
-        // 保存ボタン（デリゲートを使用）
-        $(document).off('click', '#btn-save').on('click', '#btn-save', function(e) {
+        // 保存ボタン（デリゲートを使用、一度だけ発火するように制御）
+        $(document).off('click.saveBtn').on('click.saveBtn', '#btn-save', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            e.stopImmediatePropagation();
             InputDialog.save();
+            return false;
         });
 
-        // 削除ボタン（デリゲートを使用）
-        $(document).off('click', '#btn-delete').on('click', '#btn-delete', function(e) {
+        // 削除ボタン（デリゲートを使用、一度だけ発火するように制御）
+        $(document).off('click.deleteBtn').on('click.deleteBtn', '#btn-delete', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            e.stopImmediatePropagation();
             InputDialog.confirmDelete();
+            return false;
         });
         
         // 顧客コードフォーカスアウト時
@@ -94,13 +98,17 @@ var InputDialog = {
             }
         });
         
-        // 顧客検索ボタン
-        $('#btn-kokyaku-search').on('click', function() {
+        // 顧客検索ボタン（デリゲートを使用）
+        $(document).off('click', '#btn-kokyaku-search').on('click', '#btn-kokyaku-search', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             KokyakuSearchDialog.open();
         });
         
-        // 定型文ボタン
-        $('#btn-template').on('click', function() {
+        // 定型文ボタン（デリゲートを使用）
+        $(document).off('click', '#btn-template').on('click', '#btn-template', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             TemplateDialog.open();
         });
         
@@ -406,17 +414,11 @@ var InputDialog = {
                 // 成功メッセージ
                 AppMessage.showSuccess(response.message || '保存しました。');
 
-                // 更新時はダイアログを閉じる、新規登録時は新規入力状態に戻す
-                if (isUpdate) {
-                    // 更新後はダイアログを閉じる
-                    self.formChanged = false;
-                    $('#input-dialog-overlay').removeClass('active');
-                    $('body').css('overflow', '');
-                    self.clearErrors();
-                } else {
-                    // 新規登録後はダイアログを開いたまま、新規入力状態に戻す
-                    self.resetForNewEntry();
-                }
+                // 保存後はダイアログを閉じる
+                self.formChanged = false;
+                $('#input-dialog-overlay').removeClass('active');
+                $('body').css('overflow', '');
+                self.clearErrors();
 
                 // 一覧を更新
                 if (typeof loadData === 'function') {

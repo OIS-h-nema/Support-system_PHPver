@@ -9,6 +9,7 @@
  * 2025-11-25 新規作成（Phase 08）
  * 2025-12-10 エイリアス対応（文字化け対策）
  * 2025-12-11 権限チェック撤廃、使用区分バリデーション、DELDATA移動削除
+ * 2025-12-17 保存処理のデバッグログ追加
  */
 
 // 設定ファイル読み込み
@@ -327,9 +328,14 @@ function saveMaster($master_type) {
     
     $mode = isset($_POST['mode']) ? $_POST['mode'] : 'new';
     
+    // デバッグログ
+    error_log('saveMaster called - type: ' . $master_type . ', mode: ' . $mode);
+    error_log('POST data: ' . print_r($_POST, true));
+    
     // バリデーション
     $errors = validateMasterInput($master_type, $_POST, $mode);
     if (count($errors) > 0) {
+        error_log('Validation errors: ' . print_r($errors, true));
         jsonError('入力内容に誤りがあります。', 'VALID_001', $errors);
         return;
     }
@@ -369,6 +375,8 @@ function saveProduct($mode) {
     $name = trim($_POST['name']);
     $use_flag = isset($_POST['use_flag']) ? (int)$_POST['use_flag'] : 1;
     
+    error_log('saveProduct - bumon_code: ' . $bumon_code . ', name: ' . $name . ', use_flag: ' . $use_flag . ', mode: ' . $mode);
+    
     if ($mode === 'new') {
         // 新規登録 - コード採番（エイリアス使用）
         $stmt = $pdo_conn->prepare("
@@ -380,25 +388,32 @@ function saveProduct($mode) {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $code = $result['new_code'];
         
+        error_log('New product code: ' . $code);
+        
         $stmt = $pdo_conn->prepare("
             INSERT INTO M_商品 (部門コード, 商品コード, 商品名, 使用区分, 入力日時, 更新日時)
             VALUES (?, ?, ?, ?, GETDATE(), GETDATE())
         ");
         $stmt->execute(array($bumon_code, $code, $name, $use_flag));
         
+        error_log('Product inserted successfully');
+        
         jsonSuccess(array('bumon_code' => $bumon_code, 'code' => $code), '登録しました。');
         
     } else {
         // 更新
         $code = (int)$_POST['code'];
+        $orig_bumon_code = isset($_POST['bumon_code']) ? (int)$_POST['bumon_code'] : $bumon_code;
+        
+        error_log('Updating product - bumon_code: ' . $orig_bumon_code . ', code: ' . $code);
         
         $stmt = $pdo_conn->prepare("
             UPDATE M_商品 SET 商品名 = ?, 使用区分 = ?, 更新日時 = GETDATE()
             WHERE 部門コード = ? AND 商品コード = ?
         ");
-        $stmt->execute(array($name, $use_flag, $bumon_code, $code));
+        $stmt->execute(array($name, $use_flag, $orig_bumon_code, $code));
         
-        jsonSuccess(array('bumon_code' => $bumon_code, 'code' => $code), '更新しました。');
+        jsonSuccess(array('bumon_code' => $orig_bumon_code, 'code' => $code), '更新しました。');
     }
 }
 
@@ -701,7 +716,7 @@ function validateMasterInput($master_type, $data, $mode) {
             if (empty($data['bumon_code'])) {
                 $errors[] = '部門を選択してください。';
             }
-            if (empty(trim($data['name']))) {
+            if (!isset($data['name']) || empty(trim($data['name']))) {
                 $errors[] = '商品名を入力してください。';
             } else if (mb_strlen($data['name'], 'UTF-8') > 255) {
                 $errors[] = '商品名は255文字以内で入力してください。';
@@ -715,13 +730,13 @@ function validateMasterInput($master_type, $data, $mode) {
             if (empty($data['bumon_code'])) {
                 $errors[] = '部門を選択してください。';
             }
-            if (empty(trim($data['text']))) {
+            if (!isset($data['text']) || empty(trim($data['text']))) {
                 $errors[] = '定型文を入力してください。';
             }
             break;
             
         case 'category':
-            if (empty(trim($data['name']))) {
+            if (!isset($data['name']) || empty(trim($data['name']))) {
                 $errors[] = '対応区分名を入力してください。';
             } else if (mb_strlen($data['name'], 'UTF-8') > 255) {
                 $errors[] = '対応区分名は255文字以内で入力してください。';
@@ -733,7 +748,7 @@ function validateMasterInput($master_type, $data, $mode) {
             if ($code < 1 || $code > 20) {
                 $errors[] = '項目コードは1〜20の範囲で入力してください。';
             }
-            if (empty(trim($data['name']))) {
+            if (!isset($data['name']) || empty(trim($data['name']))) {
                 $errors[] = '項目名を入力してください。';
             } else if (mb_strlen($data['name'], 'UTF-8') > 255) {
                 $errors[] = '項目名は255文字以内で入力してください。';

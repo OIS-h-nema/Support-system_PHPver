@@ -472,6 +472,7 @@ function searchCustomerList() {
 
 /**
  * 定型文リスト取得（エイリアス対応で文字化け対策）
+ * ※M_定型文テーブルには削除日時カラムが存在しない
  */
 function getTemplates() {
     global $pdo_conn;
@@ -485,13 +486,12 @@ function getTemplates() {
                     部門コード AS bumon_code,
                     定型文コード AS teikei_code, 
                     定型文 AS teikei_text
-                FROM M_定型文
-                WHERE 削除日時 IS NULL";
+                FROM M_定型文";
         
         // 部門コードが取得できた場合はその部門の定型文のみ取得
         $params = array();
         if ($bumon_code) {
-            $sql .= " AND 部門コード = ?";
+            $sql .= " WHERE 部門コード = ?";
             $params[] = $bumon_code;
         }
         
