@@ -29,7 +29,7 @@ var InputDialog = {
         
         // 既存のイベントハンドラを解除（重複登録防止）
         $('#btn-new').off('click');
-        $('#btn-dialog-close, #btn-cancel').off('click mousedown');
+        $('#btn-dialog-close').off('click mousedown');
         $('#input-dialog-overlay').off('mousedown');
         $(document).off('keydown.inputDialog');
         $('#btn-save').off('click');
@@ -42,7 +42,7 @@ var InputDialog = {
         });
         
         // ダイアログを閉じるボタン（mousedownを使用してフォーカス問題を回避）
-        $('#btn-dialog-close, #btn-cancel').on('mousedown', function(e) {
+        $('#btn-dialog-close').on('mousedown', function(e) {
             e.stopPropagation();
             e.preventDefault();
             self.close();
@@ -756,7 +756,7 @@ var KokyakuSearchDialog = {
         var self = this;
         
         // 閉じるボタン
-        $('#btn-kokyaku-search-close, #btn-kokyaku-search-cancel').on('click', function() {
+        $('#btn-kokyaku-search-close').on('click', function() {
             self.close();
         });
         
@@ -905,7 +905,7 @@ var TemplateDialog = {
         var self = this;
         
         // 閉じるボタン
-        $('#btn-template-close, #btn-template-cancel').on('click', function() {
+        $('#btn-template-close').on('click', function() {
             self.close();
         });
         

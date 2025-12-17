@@ -35,12 +35,6 @@ requireLogin();
 </head>
 <body>
 <div class="master-container">
-    <!-- ヘッダー（固定表示） -->
-    <div class="master-header">
-        <h1>マスタ設定 - 対応区分</h1>
-        <button type="button" id="btn-master-close" class="master-close-btn">閉じる</button>
-    </div>
-    
     <!-- メインコンテンツ -->
     <div class="master-content">
         <!-- メッセージエリア -->
