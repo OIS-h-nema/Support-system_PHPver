@@ -10,52 +10,6 @@
  */
 
 //---------------------------------------------------
-// コミット識別子
-//---------------------------------------------------
-/**
- * 実行中コードのコミットハッシュを解決
- * - 環境変数 APP_COMMIT_SHA を最優先
- * - .git/HEAD から参照（IIS配置時も同一構成を想定）
- * - 取得不能時は "unknown" を返す
- */
-function resolveCommitHash(): string {
-    static $resolved = null;
-    if ($resolved !== null) {
-        return $resolved;
-    }
-
-    $envSha = getenv('APP_COMMIT_SHA');
-    if (!empty($envSha)) {
-        return $resolved = trim($envSha);
-    }
-
-    $gitDir = dirname(__FILE__) . '/../.git';
-    $headFile = $gitDir . '/HEAD';
-    if (is_readable($headFile)) {
-        $head = trim((string)file_get_contents($headFile));
-        if (preg_match('/^ref:\s*(.+)$/', $head, $m)) {
-            $refPath = $gitDir . '/' . trim($m[1]);
-            if (is_readable($refPath)) {
-                $resolved = trim((string)file_get_contents($refPath));
-            }
-        } elseif (preg_match('/^[0-9a-fA-F]{7,40}$/', $head)) {
-            $resolved = substr($head, 0, 40);
-        }
-    }
-
-    if (empty($resolved)) {
-        $execSha = @exec('git rev-parse HEAD 2>/dev/null');
-        if (!empty($execSha)) {
-            $resolved = trim($execSha);
-        }
-    }
-
-    return $resolved ?: 'unknown';
-}
-
-define('APP_COMMIT_SHA', resolveCommitHash());
-
-//---------------------------------------------------
 // 環境設定
 //---------------------------------------------------
 // 開発環境: true / 本番環境: false
@@ -117,7 +71,6 @@ header('Cache-Control: private, no-store, must-revalidate, max-age=' . SESSION_L
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 header('X-XSS-Protection: 1; mode=block');
-header('X-App-Commit: ' . APP_COMMIT_SHA);
 
 //---------------------------------------------------
 // データベース設定

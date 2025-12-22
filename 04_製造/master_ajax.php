@@ -10,6 +10,7 @@
  * 2025-12-10 エイリアス対応（文字化け対策）
  * 2025-12-11 権限チェック撤廃、使用区分バリデーション、DELDATA移動削除
  * 2025-12-17 保存処理のデバッグログ追加
+ * 2025-12-19 商品マスタ保存処理のバグ修正（カラム名修正：入力日時→入力マシン）
  */
 
 // 設定ファイル読み込み
@@ -361,19 +362,32 @@ function saveMaster($master_type) {
         
     } catch (PDOException $e) {
         error_log('Master save error: ' . $e->getMessage());
-        jsonError('保存に失敗しました。', 'MASTER_004');
+        error_log('Error info: ' . print_r($e->errorInfo, true));
+        jsonError('保存に失敗しました。[' . $e->getMessage() . ']', 'MASTER_004');
+    } catch (Exception $e) {
+        error_log('Master save general error: ' . $e->getMessage());
+        jsonError('保存に失敗しました。[' . $e->getMessage() . ']', 'MASTER_004');
     }
 }
 
 /**
  * 商品マスタ保存
+ * 
+ * M_商品テーブル構造:
+ * - 商品コード (bigint, PK)
+ * - 部門コード (bigint)
+ * - 商品名 (nvarchar 255)
+ * - 使用区分 (bigint)
+ * - 更新日時 (datetime)
+ * - 入力マシン (nvarchar 255)
  */
 function saveProduct($mode) {
     global $pdo_conn;
     
     $bumon_code = (int)$_POST['bumon_code'];
-    $name = trim($_POST['name']);
+    $name = isset($_POST['name']) ? trim($_POST['name']) : '';
     $use_flag = isset($_POST['use_flag']) ? (int)$_POST['use_flag'] : 1;
+    $input_machine = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
     
     error_log('saveProduct - bumon_code: ' . $bumon_code . ', name: ' . $name . ', use_flag: ' . $use_flag . ', mode: ' . $mode);
     
@@ -390,15 +404,39 @@ function saveProduct($mode) {
         
         error_log('New product code: ' . $code);
         
-        $stmt = $pdo_conn->prepare("
-            INSERT INTO M_商品 (部門コード, 商品コード, 商品名, 使用区分, 入力日時, 更新日時)
-            VALUES (?, ?, ?, ?, GETDATE(), GETDATE())
+        // INSERT実行（正しいカラム名: 入力マシン）
+        $sql = "INSERT INTO M_商品 (部門コード, 商品コード, 商品名, 使用区分, 更新日時, 入力マシン)
+                VALUES (?, ?, ?, ?, GETDATE(), ?)";
+        $stmt = $pdo_conn->prepare($sql);
+        
+        error_log('Executing INSERT: bumon=' . $bumon_code . ', code=' . $code . ', name=' . $name . ', use_flag=' . $use_flag);
+        
+        $result = $stmt->execute(array($bumon_code, $code, $name, $use_flag, $input_machine));
+        
+        // エラーチェック
+        $errorInfo = $stmt->errorInfo();
+        error_log('Product insert - execute result: ' . ($result ? 'true' : 'false'));
+        error_log('Product insert - errorInfo: ' . print_r($errorInfo, true));
+        
+        if (!$result || $errorInfo[0] !== '00000') {
+            throw new Exception('INSERT失敗: ' . $errorInfo[2]);
+        }
+        
+        // 登録確認（SQL ServerではrowCountが正しく動かない場合があるため）
+        $verifyStmt = $pdo_conn->prepare("
+            SELECT COUNT(*) as cnt FROM M_商品 
+            WHERE 部門コード = ? AND 商品コード = ?
         ");
-        $stmt->execute(array($bumon_code, $code, $name, $use_flag));
+        $verifyStmt->execute(array($bumon_code, $code));
+        $verifyResult = $verifyStmt->fetch(PDO::FETCH_ASSOC);
         
-        error_log('Product inserted successfully');
+        error_log('Verify insert - count: ' . $verifyResult['cnt']);
         
-        jsonSuccess(array('bumon_code' => $bumon_code, 'code' => $code), '登録しました。');
+        if ($verifyResult['cnt'] > 0) {
+            jsonSuccess(array('bumon_code' => $bumon_code, 'code' => $code), '登録しました。');
+        } else {
+            throw new Exception('登録確認に失敗しました');
+        }
         
     } else {
         // 更新
@@ -408,10 +446,15 @@ function saveProduct($mode) {
         error_log('Updating product - bumon_code: ' . $orig_bumon_code . ', code: ' . $code);
         
         $stmt = $pdo_conn->prepare("
-            UPDATE M_商品 SET 商品名 = ?, 使用区分 = ?, 更新日時 = GETDATE()
+            UPDATE M_商品 SET 商品名 = ?, 使用区分 = ?, 更新日時 = GETDATE(), 入力マシン = ?
             WHERE 部門コード = ? AND 商品コード = ?
         ");
-        $stmt->execute(array($name, $use_flag, $orig_bumon_code, $code));
+        $result = $stmt->execute(array($name, $use_flag, $input_machine, $orig_bumon_code, $code));
+        
+        $errorInfo = $stmt->errorInfo();
+        if (!$result || $errorInfo[0] !== '00000') {
+            throw new Exception('UPDATE失敗: ' . $errorInfo[2]);
+        }
         
         jsonSuccess(array('bumon_code' => $orig_bumon_code, 'code' => $code), '更新しました。');
     }
@@ -442,7 +485,12 @@ function saveTemplate($mode) {
             INSERT INTO M_定型文 (部門コード, 定型文コード, 定型文, 作成日時, 作成者コード, 更新日時, 更新者コード)
             VALUES (?, ?, ?, GETDATE(), ?, GETDATE(), ?)
         ");
-        $stmt->execute(array($bumon_code, $code, $text, $user_code, $user_code));
+        $result = $stmt->execute(array($bumon_code, $code, $text, $user_code, $user_code));
+        
+        $errorInfo = $stmt->errorInfo();
+        if (!$result || $errorInfo[0] !== '00000') {
+            throw new Exception('INSERT失敗: ' . $errorInfo[2]);
+        }
         
         jsonSuccess(array('bumon_code' => $bumon_code, 'code' => $code), '登録しました。');
         
@@ -454,7 +502,12 @@ function saveTemplate($mode) {
             UPDATE M_定型文 SET 定型文 = ?, 更新日時 = GETDATE(), 更新者コード = ?
             WHERE 部門コード = ? AND 定型文コード = ?
         ");
-        $stmt->execute(array($text, $user_code, $bumon_code, $code));
+        $result = $stmt->execute(array($text, $user_code, $bumon_code, $code));
+        
+        $errorInfo = $stmt->errorInfo();
+        if (!$result || $errorInfo[0] !== '00000') {
+            throw new Exception('UPDATE失敗: ' . $errorInfo[2]);
+        }
         
         jsonSuccess(array('bumon_code' => $bumon_code, 'code' => $code), '更新しました。');
     }
@@ -482,7 +535,12 @@ function saveCategory($mode) {
             INSERT INTO M_対応区分 (対応区分コード, 対応区分名, 更新日時, 入力マシン)
             VALUES (?, ?, GETDATE(), ?)
         ");
-        $stmt->execute(array($code, $name, $input_machine));
+        $result = $stmt->execute(array($code, $name, $input_machine));
+        
+        $errorInfo = $stmt->errorInfo();
+        if (!$result || $errorInfo[0] !== '00000') {
+            throw new Exception('INSERT失敗: ' . $errorInfo[2]);
+        }
         
         jsonSuccess(array('code' => $code), '登録しました。');
         
@@ -494,7 +552,12 @@ function saveCategory($mode) {
             UPDATE M_対応区分 SET 対応区分名 = ?, 更新日時 = GETDATE(), 入力マシン = ?
             WHERE 対応区分コード = ?
         ");
-        $stmt->execute(array($name, $input_machine, $code));
+        $result = $stmt->execute(array($name, $input_machine, $code));
+        
+        $errorInfo = $stmt->errorInfo();
+        if (!$result || $errorInfo[0] !== '00000') {
+            throw new Exception('UPDATE失敗: ' . $errorInfo[2]);
+        }
         
         jsonSuccess(array('code' => $code), '更新しました。');
     }
@@ -527,7 +590,12 @@ function saveContent($mode) {
             INSERT INTO M_対応内容項目 (項目コード, 項目名, 更新日時, 入力マシン)
             VALUES (?, ?, GETDATE(), ?)
         ");
-        $stmt->execute(array($code, $name, $input_machine));
+        $result = $stmt->execute(array($code, $name, $input_machine));
+        
+        $errorInfo = $stmt->errorInfo();
+        if (!$result || $errorInfo[0] !== '00000') {
+            throw new Exception('INSERT失敗: ' . $errorInfo[2]);
+        }
         
         jsonSuccess(array('code' => $code), '登録しました。');
         
@@ -537,7 +605,12 @@ function saveContent($mode) {
             UPDATE M_対応内容項目 SET 項目名 = ?, 更新日時 = GETDATE(), 入力マシン = ?
             WHERE 項目コード = ?
         ");
-        $stmt->execute(array($name, $input_machine, $code));
+        $result = $stmt->execute(array($name, $input_machine, $code));
+        
+        $errorInfo = $stmt->errorInfo();
+        if (!$result || $errorInfo[0] !== '00000') {
+            throw new Exception('UPDATE失敗: ' . $errorInfo[2]);
+        }
         
         jsonSuccess(array('code' => $code), '更新しました。');
     }
@@ -562,7 +635,7 @@ function deleteMaster($master_type) {
                 try {
                     // 1. 対象データ取得
                     $stmt = $pdo_conn->prepare("
-                        SELECT 部門コード, 商品コード, 商品名, 使用区分, 入力日時, 更新日時
+                        SELECT 部門コード, 商品コード, 商品名, 使用区分, 更新日時, 入力マシン
                         FROM M_商品
                         WHERE 部門コード = ? AND 商品コード = ?
                     ");
@@ -575,7 +648,7 @@ function deleteMaster($master_type) {
                     
                     // 2. DELDATA_商品へインサート
                     $stmt = $pdo_conn->prepare("
-                        INSERT INTO DELDATA_商品 (部門コード, 商品コード, 商品名, 使用区分, 入力日時, 更新日時, 削除日時)
+                        INSERT INTO DELDATA_商品 (部門コード, 商品コード, 商品名, 使用区分, 更新日時, 入力マシン, 削除日時)
                         VALUES (?, ?, ?, ?, ?, ?, GETDATE())
                     ");
                     $stmt->execute(array(
@@ -583,8 +656,8 @@ function deleteMaster($master_type) {
                         $row['商品コード'],
                         $row['商品名'],
                         $row['使用区分'],
-                        $row['入力日時'],
-                        $row['更新日時']
+                        $row['更新日時'],
+                        $row['入力マシン']
                     ));
                     
                     // 3. M_商品から削除

@@ -7,6 +7,8 @@
  * 修正履歴:
  * 2025-11-25 新規作成（Phase 08）
  * 2025-12-17 ヘッダー・閉じるボタン固定表示対応（iframe対応版）
+ * 2025-12-17 ヘッダーエリア削除（ダイアログ共通仕様変更）
+ *            - マスタ画面からヘッダーを削除し、親モーダルに委譲
  */
 
 /* ====================================
@@ -16,7 +18,7 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    overflow: auto;
 }
 
 /* ====================================
@@ -28,18 +30,12 @@ html, body {
     margin: 0 auto;
     padding: 0;
     background: #fff;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    min-height: 100%;
 }
 
-/* メインコンテンツエリア（スクロール領域） */
+/* メインコンテンツエリア */
 .master-content {
-    flex: 1;
     padding: 20px;
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 
 /* メッセージエリア */
@@ -335,16 +331,9 @@ html, body {
         padding: 15px;
     }
     
-    .master-header {
-        padding: 12px 15px;
-    }
-    
-    .master-header h1 {
-        font-size: 16px;
-    }
-    
     .master-input-row {
         flex-direction: column;
+        margin-bottom: 15px;
     }
     
     .master-input-row label {

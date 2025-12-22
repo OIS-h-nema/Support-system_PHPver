@@ -7,6 +7,7 @@
  * 修正履歴:
  * 2025-11-25 新規作成（Phase 08）
  * 2025-12-17 保存処理のバグ修正、フィルタ既定値対応
+ * 2025-12-19 保存・削除結果のアラート表示追加、商品マスタ保存処理修正
  */
 
 /**
@@ -253,13 +254,18 @@ var MasterManager = {
         AppAjax.post('master_ajax.php', params, function(response) {
             console.log('Save response:', response);
             if (response.status === 'success') {
+                // アラートで結果を表示
+                alert(response.message || '保存しました。');
                 self.showMessage(response.message);
                 self.clearForm();
                 self.loadList();
             } else {
                 if (response.errors && response.errors.length > 0) {
+                    // エラーをアラートで表示
+                    alert('エラー: ' + response.errors.join('\n'));
                     self.showErrors(response.errors);
                 } else {
+                    alert('エラー: ' + (response.message || '保存に失敗しました。'));
                     AppMessage.showError(response.message || '保存に失敗しました。');
                 }
             }
@@ -300,9 +306,12 @@ var MasterManager = {
         
         AppAjax.post('master_ajax.php', params, function(response) {
             if (response.status === 'success') {
+                // アラートで結果を表示
+                alert(response.message || '削除しました。');
                 self.showMessage(response.message);
                 self.loadList();
             } else {
+                alert('エラー: ' + (response.message || '削除に失敗しました。'));
                 AppMessage.showError(response.message || '削除に失敗しました。');
             }
         });
@@ -432,6 +441,7 @@ var ProductMaster = $.extend({}, MasterManager, {
     getFormData: function() {
         return {
             bumon_code: $('#master-bumon').val(),
+            code: $('#master-code').val(),
             name: $('#master-name').val(),
             use_flag: $('#master-use').val()
         };
